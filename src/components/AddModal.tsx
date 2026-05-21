@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import styles from "./AddModal.module.css";
 
 interface AddModalProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ export default function AddModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div onClick={onClose} className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300" />
       
-      <div className={`border rounded-2xl w-full max-w-md shadow-2xl relative z-10 p-6 overflow-hidden animate-fade-in transition-all ${
+      <div className={`border rounded-2xl w-full max-w-md shadow-2xl relative z-10 p-6 overflow-hidden transition-all ${styles.animateFadeIn} ${
         theme === "dark" ? "bg-[#0f1422] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
       }`}>
         <div className="flex items-center justify-between pb-4 border-b border-slate-800/60 mb-5">
@@ -76,7 +77,7 @@ export default function AddModal({
                 }}
                 className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                   formType === "Receitas"
-                    ? "bg-emerald-600/15 border-emerald-500/40 text-emerald-400 glow-green"
+                    ? `bg-emerald-600/15 border-emerald-500/40 text-emerald-400 ${styles.glowGreen}`
                     : theme === "dark"
                     ? "bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800/40"
                     : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200/50"
@@ -93,7 +94,7 @@ export default function AddModal({
                 }}
                 className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                   formType === "Despesas"
-                    ? "bg-rose-600/15 border-rose-500/40 text-rose-400 glow-red"
+                    ? `bg-rose-600/15 border-rose-500/40 text-rose-400 ${styles.glowRed}`
                     : theme === "dark"
                     ? "bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800/40"
                     : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200/50"

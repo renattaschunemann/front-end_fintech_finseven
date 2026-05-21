@@ -1,0 +1,15 @@
+.glowBlue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+.glowGreen {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.glowRed {
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+.glowCyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+}
