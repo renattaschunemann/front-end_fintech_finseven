@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "./Sidebar.module.css";
+import "./Sidebar.css";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -47,7 +47,7 @@ export default function Sidebar({
               </svg>
             </button>
           </div>
-
+ 
           <nav className="p-4 space-y-1">
             {[
               { name: "Home", label: "Home", icon: (
@@ -95,7 +95,7 @@ export default function Sidebar({
                 className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   activeMenu === item.name
                     ? theme === "dark"
-                      ? `bg-blue-600/15 text-blue-400 border border-blue-500/20 shadow-md ${styles.glowBlue}`
+                      ? "bg-blue-600/15 text-blue-400 border border-blue-500/20 shadow-md glowBlue"
                       : "bg-blue-50 text-blue-600 border border-blue-200 shadow-sm"
                     : theme === "dark"
                     ? "text-slate-400 border border-transparent hover:bg-slate-800/40 hover:text-slate-200"

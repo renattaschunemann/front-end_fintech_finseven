@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import styles from "./Chart.module.css";
+import "./Chart.css";
 
 interface ChartProps {
   chartData: Array<{
@@ -123,7 +123,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     height={Math.max(2, recHeight)}
                     rx="4"
                     fill={isHovered ? "#34d399" : "#059669"}
-                    className={`${styles.animateBarGrow} cursor-pointer transition-all duration-200 hover:brightness-125`}
+                    className="animateBarGrow cursor-pointer transition-all duration-200 hover:brightness-125"
                     onMouseEnter={() => {
                       setActiveTooltip({
                         x: recX + barWidth / 2,
@@ -143,7 +143,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     height={Math.max(2, despHeight)}
                     rx="4"
                     fill={isHovered ? "#fb7185" : "#dc2626"}
-                    className={`${styles.animateBarGrow} cursor-pointer transition-all duration-200 hover:brightness-125`}
+                    className="animateBarGrow cursor-pointer transition-all duration-200 hover:brightness-125"
                     onMouseEnter={() => {
                       setActiveTooltip({
                         x: despX + barWidth / 2,
@@ -193,7 +193,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
 
           {activeTooltip && (
             <div 
-              className={`absolute border rounded-xl p-3.5 shadow-2xl z-30 transition-all duration-200 pointer-events-none w-56 text-[11px] font-semibold ${styles.animateFadeIn} ${
+              className={`absolute border rounded-xl p-3.5 shadow-2xl z-30 transition-all duration-200 pointer-events-none w-56 text-[11px] font-semibold animateFadeIn ${
                 theme === "dark" ? "bg-slate-950/95 border-slate-800 text-slate-300" : "bg-white/95 border-slate-200 text-slate-700"
               }`}
               style={{
