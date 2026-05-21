@@ -1,13 +1,6 @@
 "use client";
 
-import React from "react";
-
-interface HeaderProps {
-  setSidebarOpen: (open: boolean) => void;
-  theme: "dark" | "light";
-  onAddClick: () => void;
-  showToast: (msg: string, type: "success" | "info" | "error") => void;
-}
+import { HeaderProps } from "@/interfaces";
 
 export default function Header({
   setSidebarOpen,

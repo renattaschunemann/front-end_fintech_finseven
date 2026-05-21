@@ -2,16 +2,7 @@
 
 import React from "react";
 import "./StatsCards.css";
-
-interface StatsCardsProps {
-  stats: {
-    saldoAtual: number;
-    receitasDoMes: number;
-    despesasDoMes: number;
-    balancoDoMes: number;
-  };
-  formatCurrency: (val: number) => string;
-}
+import { StatsCardsProps } from "@/interfaces";
 
 export default function StatsCards({ stats, formatCurrency }: StatsCardsProps) {
   return (

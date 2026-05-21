@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Transaction } from "@/components/types";
+import { Transaction } from "@/interfaces";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import StatsCards from "@/components/StatsCards";

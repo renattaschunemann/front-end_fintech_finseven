@@ -2,25 +2,7 @@
 
 import React from "react";
 import "./EditModal.css";
-
-interface EditModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  formType: "Receitas" | "Despesas";
-  setFormType: (type: "Receitas" | "Despesas") => void;
-  formDescription: string;
-  setFormDescription: (desc: string) => void;
-  formValue: string;
-  setFormValue: (val: string) => void;
-  formDate: string;
-  setFormDate: (date: string) => void;
-  formAccount: string;
-  setFormAccount: (acc: string) => void;
-  formCategory: string;
-  setFormCategory: (cat: string) => void;
-  theme: "dark" | "light";
-}
+import { EditModalProps } from "@/interfaces";
 
 export default function EditModal({
   isOpen,

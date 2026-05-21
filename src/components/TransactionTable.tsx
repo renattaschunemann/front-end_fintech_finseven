@@ -1,17 +1,7 @@
 "use client";
 
 import React from "react";
-import { Transaction } from "./types";
-
-interface TransactionTableProps {
-  transactions: Transaction[];
-  theme: "dark" | "light";
-  onEditClick: (tx: Transaction) => void;
-  onDeleteClick: (id: string) => void;
-  formatCurrency: (val: number) => string;
-  formatDateForDisplay: (dateStr: string) => string;
-  onQuickAddClick: (type: "Receitas" | "Despesas") => void;
-}
+import { Transaction, TransactionTableProps } from "@/interfaces";
 
 export default function TransactionTable({
   transactions,

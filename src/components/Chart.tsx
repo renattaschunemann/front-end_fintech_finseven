@@ -2,16 +2,7 @@
 
 import React, { useState } from "react";
 import "./Chart.css";
-
-interface ChartProps {
-  chartData: Array<{
-    name: string;
-    receitas: number;
-    despesas: number;
-  }>;
-  theme: "dark" | "light";
-  formatCurrency: (val: number) => string;
-}
+import { ChartProps } from "@/interfaces";
 
 export default function Chart({ chartData, theme, formatCurrency }: ChartProps) {
   const [activeTooltip, setActiveTooltip] = useState<{

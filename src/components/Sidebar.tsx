@@ -2,15 +2,7 @@
 
 import React from "react";
 import "./Sidebar.css";
-
-interface SidebarProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  activeMenu: string;
-  setActiveMenu: (menu: string) => void;
-  theme: "dark" | "light";
-  showToast: (msg: string, type: "success" | "info" | "error") => void;
-}
+import { SidebarProps } from "@/interfaces";
 
 export default function Sidebar({
   sidebarOpen,

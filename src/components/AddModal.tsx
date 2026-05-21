@@ -2,25 +2,7 @@
 
 import React from "react";
 import "./AddModal.css";
-
-interface AddModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  formType: "Receitas" | "Despesas";
-  setFormType: (type: "Receitas" | "Despesas") => void;
-  formDescription: string;
-  setFormDescription: (desc: string) => void;
-  formValue: string;
-  setFormValue: (val: string) => void;
-  formDate: string;
-  setFormDate: (date: string) => void;
-  formAccount: string;
-  setFormAccount: (acc: string) => void;
-  formCategory: string;
-  setFormCategory: (cat: string) => void;
-  theme: "dark" | "light";
-}
+import { AddModalProps } from "@/interfaces";
 
 export default function AddModal({
   isOpen,
