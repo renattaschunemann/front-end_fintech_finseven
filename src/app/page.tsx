@@ -282,6 +282,10 @@ export default function Home() {
         setActiveMenu={(menu) => {
           if (menu === "Lançamento") {
             router.push("/lancamento");
+          } else if (menu === "Receitas") {
+            router.push("/receitas");
+          } else if (menu === "Despesas") {
+            router.push("/despesas");
           } else {
             setActiveMenu(menu);
           }

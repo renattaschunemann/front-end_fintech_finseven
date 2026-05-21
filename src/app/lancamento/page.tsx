@@ -164,6 +164,10 @@ function LancamentoContent() {
             router.push("/");
           } else if (menu === "Lançamento") {
             setActiveMenu("Lançamento");
+          } else if (menu === "Receitas") {
+            router.push("/receitas");
+          } else if (menu === "Despesas") {
+            router.push("/despesas");
           } else {
             router.push("/?menu=" + menu);
           }
