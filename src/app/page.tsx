@@ -57,21 +57,42 @@ const MONTHLY_HISTORICAL_DATA = [
   { name: "Novembro", receitas: 5600, despesas: 4900 },
 ];
 
+import { useRouter } from "next/navigation";
+
 export default function Home() {
+  const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeMenu, setActiveMenu] = useState("Home");
-  const [formType, setFormType] = useState<"Receitas" | "Despesas">("Despesas");
+  const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
   const [formCategory, setFormCategory] = useState("Despesas");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
   const [formDate, setFormDate] = useState("2025-12-10");
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("finseven-transactions");
+    if (saved) {
+      try {
+        setTransactions(JSON.parse(saved));
+      } catch (e) {
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
+    }
+  }, [transactions, isLoaded]);
 
   useEffect(() => {
     if (toast) {
@@ -258,7 +279,13 @@ export default function Home() {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         activeMenu={activeMenu}
-        setActiveMenu={setActiveMenu}
+        setActiveMenu={(menu) => {
+          if (menu === "Lançamento") {
+            router.push("/lancamento");
+          } else {
+            setActiveMenu(menu);
+          }
+        }}
         theme={theme}
         showToast={showToast}
       />
@@ -267,7 +294,7 @@ export default function Home() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => handleOpenAddModal("Despesas")}
+          onAddClick={() => router.push("/lancamento")}
           showToast={showToast}
         />
 
@@ -290,7 +317,7 @@ export default function Home() {
             onDeleteClick={handleDeleteTransaction}
             formatCurrency={formatCurrency}
             formatDateForDisplay={formatDateForDisplay}
-            onQuickAddClick={handleOpenAddModal}
+            onQuickAddClick={(type) => router.push("/lancamento?type=" + type)}
           />
         </div>
       </main>

@@ -30,15 +30,17 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-2">
-        <button 
-          onClick={onAddClick}
-          className="bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.02] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"
-        >
-          <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>+ Lançamento</span>
-        </button>
+        {onAddClick && (
+          <button 
+            onClick={onAddClick}
+            className="bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.02] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"
+          >
+            <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>+ Lançamento</span>
+          </button>
+        )}
 
         <button 
           onClick={() => showToast("Painel compartilhado!", "success")}

@@ -7,7 +7,7 @@ export interface Transaction {
   description: string;
   account: string;
   value: number;
-  type: "Receitas" | "Despesas";
+  type: "Receitas" | "Despesas" | "Investimentos";
 }
 
 export interface SidebarProps {
@@ -22,7 +22,7 @@ export interface SidebarProps {
 export interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
   theme: "dark" | "light";
-  onAddClick: () => void;
+  onAddClick?: () => void;
   showToast: (msg: string, type: "success" | "info" | "error") => void;
 }
 
@@ -53,15 +53,15 @@ export interface TransactionTableProps {
   onDeleteClick: (id: string) => void;
   formatCurrency: (val: number) => string;
   formatDateForDisplay: (dateStr: string) => string;
-  onQuickAddClick: (type: "Receitas" | "Despesas") => void;
+  onQuickAddClick: (type: "Receitas" | "Despesas" | "Investimentos") => void;
 }
 
 export interface AddModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
-  formType: "Receitas" | "Despesas";
-  setFormType: (type: "Receitas" | "Despesas") => void;
+  formType: "Receitas" | "Despesas" | "Investimentos";
+  setFormType: (type: "Receitas" | "Despesas" | "Investimentos") => void;
   formDescription: string;
   setFormDescription: (desc: string) => void;
   formValue: string;
@@ -79,8 +79,8 @@ export interface EditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
-  formType: "Receitas" | "Despesas";
-  setFormType: (type: "Receitas" | "Despesas") => void;
+  formType: "Receitas" | "Despesas" | "Investimentos";
+  setFormType: (type: "Receitas" | "Despesas" | "Investimentos") => void;
   formDescription: string;
   setFormDescription: (desc: string) => void;
   formValue: string;
