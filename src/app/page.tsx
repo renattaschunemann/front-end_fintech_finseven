@@ -10,44 +10,90 @@ import TransactionTable from "@/components/TransactionTable";
 import AddModal from "@/components/AddModal";
 import EditModal from "@/components/EditModal";
 
-const INITIAL_TRANSACTIONS: Transaction[] = [
-  {
-    id: "tx-1",
-    date: "2025-12-10",
-    category: "Despesas",
-    description: "Cartão de Crédito",
-    account: "Bradesco",
-    value: -1110.50,
-    type: "Despesas",
-  },
-  {
-    id: "tx-2",
-    date: "2025-12-09",
-    category: "Receitas",
-    description: "Salário",
-    account: "Caixa Econômica",
-    value: 4500.00,
-    type: "Receitas",
-  },
-  {
-    id: "tx-3",
-    date: "2025-12-08",
-    category: "Despesas",
-    description: "Supermercado",
-    account: "Itaú",
-    value: -320.75,
-    type: "Despesas",
-  },
-  {
-    id: "tx-4",
-    date: "2025-12-05",
-    category: "Receitas",
-    description: "Freelance",
-    account: "NuBank",
-    value: 800.00,
-    type: "Receitas",
+const generateMockTransactions = (): Transaction[] => {
+  const list: Transaction[] = [];
+  const startYear = 2024;
+  const startMonth = 0;
+  const endYear = 2026;
+  const endMonth = 4;
+
+  let idCounter = 1;
+
+  const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
+  const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
+  const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
+
+  const descReceitas = [
+    ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
+    ["Projeto Freelance", "Consultoria Técnica", "Desenvolvimento Web"],
+    ["Rendimento FIIs", "Dividendos Ações", "Aplicação Renda Fixa"],
+    ["Reembolso Despesas", "Venda de Usado", "Bônus Anual"]
+  ];
+
+  const descDespesas = [
+    ["Compras Mensais", "Feira de Orgânicos", "Padaria e Lanches"],
+    ["Aluguel Residencial", "Condomínio", "Conta de Luz e Água"],
+    ["Combustível", "Mensalidade Metrô", "Aplicativo de Corrida"],
+    ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
+    ["Consulta Médica", "Farmácia", "Exames Clínicos"],
+    ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
+  ];
+
+  for (let year = startYear; year <= endYear; year++) {
+    const minM = year === startYear ? startMonth : 0;
+    const maxM = year === endYear ? endMonth : 11;
+
+    for (let month = minM; month <= maxM; month++) {
+      const padMonth = String(month + 1).padStart(2, "0");
+
+      for (let i = 0; i < 3; i++) {
+        const dayReceita = String(5 + i * 7).padStart(2, "0");
+        const dateStr = `${year}-${padMonth}-${dayReceita}`;
+        
+        const catIdx = (year + month + i) % categoriesReceitas.length;
+        const cat = categoriesReceitas[catIdx];
+        const descList = descReceitas[catIdx];
+        const desc = descList[i % descList.length];
+        const value = 2000 + ((year - startYear) * 300) + (month * 50) + (i * 250);
+
+        list.push({
+          id: `tx-gen-${idCounter++}`,
+          date: dateStr,
+          category: cat,
+          description: desc,
+          account: accounts[idCounter % accounts.length],
+          value: value,
+          type: "Receitas"
+        });
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const dayDespesa = String(10 + i * 8).padStart(2, "0");
+        const dateStr = `${year}-${padMonth}-${dayDespesa}`;
+
+        const catIdx = (year + month + i) % categoriesDespesas.length;
+        const cat = categoriesDespesas[catIdx];
+        const descList = descDespesas[catIdx];
+        const desc = descList[i % descList.length];
+        const value = 150 + (month * 15) + (i * 120);
+
+        list.push({
+          id: `tx-gen-${idCounter++}`,
+          date: dateStr,
+          category: cat,
+          description: desc,
+          account: accounts[idCounter % accounts.length],
+          value: -value,
+          type: "Despesas"
+        });
+      }
+    }
   }
-];
+
+  return list.sort((a, b) => b.date.localeCompare(a.date));
+};
+
+const INITIAL_TRANSACTIONS: Transaction[] = generateMockTransactions();
 
 const MONTHLY_HISTORICAL_DATA = [
   { name: "Julho", receitas: 5300, despesas: 4100 },
@@ -81,9 +127,17 @@ export default function Home() {
     const saved = localStorage.getItem("finseven-transactions");
     if (saved) {
       try {
-        setTransactions(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed.length < 10) {
+          setTransactions(INITIAL_TRANSACTIONS);
+        } else {
+          setTransactions(parsed);
+        }
       } catch (e) {
+        setTransactions(INITIAL_TRANSACTIONS);
       }
+    } else {
+      setTransactions(INITIAL_TRANSACTIONS);
     }
     setIsLoaded(true);
   }, []);

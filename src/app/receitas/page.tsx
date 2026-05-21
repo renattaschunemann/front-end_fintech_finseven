@@ -10,6 +10,89 @@ import EditModal from "@/components/EditModal";
 
 function ReceitasContent() {
   const router = useRouter();
+  const generateMockTransactions = (): Transaction[] => {
+    const list: Transaction[] = [];
+    const startYear = 2024;
+    const startMonth = 0;
+    const endYear = 2026;
+    const endMonth = 4;
+
+    let idCounter = 1;
+
+    const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
+    const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
+    const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
+
+    const descReceitas = [
+      ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
+      ["Projeto Freelance", "Consultoria Técnica", "Desenvolvimento Web"],
+      ["Rendimento FIIs", "Dividendos Ações", "Aplicação Renda Fixa"],
+      ["Reembolso Despesas", "Venda de Usado", "Bônus Anual"]
+    ];
+
+    const descDespesas = [
+      ["Compras Mensais", "Feira de Orgânicos", "Padaria e Lanches"],
+      ["Aluguel Residencial", "Condomínio", "Conta de Luz e Água"],
+      ["Combustível", "Mensalidade Metrô", "Aplicativo de Corrida"],
+      ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
+      ["Consulta Médica", "Farmácia", "Exames Clínicos"],
+      ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
+    ];
+
+    for (let year = startYear; year <= endYear; year++) {
+      const minM = year === startYear ? startMonth : 0;
+      const maxM = year === endYear ? endMonth : 11;
+
+      for (let month = minM; month <= maxM; month++) {
+        const padMonth = String(month + 1).padStart(2, "0");
+
+        for (let i = 0; i < 3; i++) {
+          const dayReceita = String(5 + i * 7).padStart(2, "0");
+          const dateStr = `${year}-${padMonth}-${dayReceita}`;
+          
+          const catIdx = (year + month + i) % categoriesReceitas.length;
+          const cat = categoriesReceitas[catIdx];
+          const descList = descReceitas[catIdx];
+          const desc = descList[i % descList.length];
+          const value = 2000 + ((year - startYear) * 300) + (month * 50) + (i * 250);
+
+          list.push({
+            id: `tx-gen-${idCounter++}`,
+            date: dateStr,
+            category: cat,
+            description: desc,
+            account: accounts[idCounter % accounts.length],
+            value: value,
+            type: "Receitas"
+          });
+        }
+
+        for (let i = 0; i < 3; i++) {
+          const dayDespesa = String(10 + i * 8).padStart(2, "0");
+          const dateStr = `${year}-${padMonth}-${dayDespesa}`;
+
+          const catIdx = (year + month + i) % categoriesDespesas.length;
+          const cat = categoriesDespesas[catIdx];
+          const descList = descDespesas[catIdx];
+          const desc = descList[i % descList.length];
+          const value = 150 + (month * 15) + (i * 120);
+
+          list.push({
+            id: `tx-gen-${idCounter++}`,
+            date: dateStr,
+            category: cat,
+            description: desc,
+            account: accounts[idCounter % accounts.length],
+            value: -value,
+            type: "Despesas"
+          });
+        }
+      }
+    }
+
+    return list.sort((a, b) => b.date.localeCompare(a.date));
+  };
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,11 +117,20 @@ function ReceitasContent() {
 
   useEffect(() => {
     const saved = localStorage.getItem("finseven-transactions");
+    const initialTxs = generateMockTransactions();
     if (saved) {
       try {
-        setTransactions(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed.length < 10) {
+          setTransactions(initialTxs);
+        } else {
+          setTransactions(parsed);
+        }
       } catch (e) {
+        setTransactions(initialTxs);
       }
+    } else {
+      setTransactions(initialTxs);
     }
     setIsLoaded(true);
   }, []);
@@ -311,10 +403,12 @@ function ReceitasContent() {
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
                   }`}>De</label>
                   <input
+                    id="filter-start-date"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 ${
+                    onBlur={(e) => setStartDate(e.target.value)}
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 select-text ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"
@@ -327,10 +421,12 @@ function ReceitasContent() {
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
                   }`}>Até</label>
                   <input
+                    id="filter-end-date"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 ${
+                    onBlur={(e) => setEndDate(e.target.value)}
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 select-text ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"
@@ -341,11 +437,45 @@ function ReceitasContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (!startDate || !endDate) {
+                    let startVal = startDate;
+                    let endVal = endDate;
+                    if (!startVal) {
+                      const el = document.getElementById("filter-start-date") as HTMLInputElement;
+                      if (el && el.value) {
+                        startVal = el.value;
+                      }
+                    }
+                    if (!endVal) {
+                      const el = document.getElementById("filter-end-date") as HTMLInputElement;
+                      if (el && el.value) {
+                        endVal = el.value;
+                      }
+                    }
+                    const normalizeDate = (d: string) => {
+                      if (!d) return "";
+                      const clean = d.trim();
+                      if (clean.includes("/")) {
+                        const parts = clean.split("/");
+                        if (parts.length === 3) {
+                          if (parts[2].length === 4) {
+                            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                          }
+                          if (parts[0].length === 4) {
+                            return `${parts[0]}-${parts[1]}-${parts[2]}`;
+                          }
+                        }
+                      }
+                      return clean;
+                    };
+                    const normStart = normalizeDate(startVal);
+                    const normEnd = normalizeDate(endVal);
+                    if (normStart) setStartDate(normStart);
+                    if (normEnd) setEndDate(normEnd);
+                    if (!normStart || !normEnd) {
                       showToast("Por favor, selecione ambas as datas para filtrar.", "error");
                       return;
                     }
-                    if (new Date(startDate) > new Date(endDate)) {
+                    if (new Date(normStart) > new Date(normEnd)) {
                       showToast("A data inicial não pode ser posterior à data final.", "error");
                       return;
                     }
