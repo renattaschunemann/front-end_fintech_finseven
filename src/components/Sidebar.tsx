@@ -25,7 +25,7 @@ export default function Sidebar({
               <img 
                 src="/logo.png" 
                 alt="FinSeven Logo" 
-                className="h-[41.4px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
+                className="h-[47.61px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
               />
               <p className={`text-[7px] font-bold uppercase tracking-[0.2em] leading-none pl-1 mt-1 transition-colors ${
                 theme === "dark" ? "text-cyan-500" : "text-cyan-600"
