@@ -83,12 +83,6 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanCpf = cpf.replace(/\D/g, "");
-    if (cleanCpf.length !== 11) {
-      showToast("Por favor, preencha um CPF válido com 11 dígitos.", "error");
-      return;
-    }
-
     if (password.length < 6) {
       showToast("A senha deve ter no mínimo 6 caracteres.", "error");
       return;
@@ -99,6 +93,12 @@ export default function LoginPage() {
     let users = usersJson ? JSON.parse(usersJson) : [];
 
     if (activeTab === "register") {
+      const cleanCpf = cpf.replace(/\D/g, "");
+      if (cleanCpf.length !== 11) {
+        showToast("Por favor, preencha um CPF válido com 11 dígitos.", "error");
+        return;
+      }
+
       if (!nome.trim()) {
         showToast("Por favor, preencha seu nome.", "error");
         return;
@@ -114,10 +114,16 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if CPF is already registered
-      const userExists = users.find((u: any) => u.cpf === cleanCpf);
-      if (userExists) {
+      // Check if CPF or Email is already registered
+      const userExistsCpf = users.find((u: any) => u.cpf === cleanCpf);
+      if (userExistsCpf) {
         showToast("Este CPF já está cadastrado no sistema.", "error");
+        return;
+      }
+
+      const userExistsEmail = users.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase());
+      if (userExistsEmail) {
+        showToast("Este E-mail já está cadastrado no sistema.", "error");
         return;
       }
 
@@ -144,12 +150,17 @@ export default function LoginPage() {
         router.push("/");
       }, 1000);
     } else {
-      // Login flow
-      const matchedUser = users.find((u: any) => u.cpf === cleanCpf && u.password === password);
+      // Login flow using Email
+      if (!email.includes("@")) {
+        showToast("Por favor, preencha um e-mail válido.", "error");
+        return;
+      }
+
+      const matchedUser = users.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
 
       if (!matchedUser) {
         // Fallback default admin user if database is empty to ease initial usage
-        if (cleanCpf === "12345678900" && password === "admin123") {
+        if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
           const defaultAdmin = {
             name: "Administrador FinSeven",
             cpf: "12345678900",
@@ -169,7 +180,7 @@ export default function LoginPage() {
           return;
         }
 
-        showToast("CPF ou senha inválidos.", "error");
+        showToast("E-mail ou senha inválidos.", "error");
         return;
       }
 
@@ -285,40 +296,20 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div>
-              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                theme === "dark" ? "text-slate-400" : "text-slate-500"
-              }`}>
-                CPF
-              </label>
-              <input
-                type="text"
-                required
-                value={cpf}
-                onChange={(e) => handleCpfChange(e.target.value)}
-                placeholder="000.000.000-00"
-                maxLength={14}
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                  theme === "dark"
-                    ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
-                    : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                }`}
-              />
-            </div>
-
             {activeTab === "register" && (
               <div>
                 <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                   theme === "dark" ? "text-slate-400" : "text-slate-500"
                 }`}>
-                  E-mail
+                  CPF
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seuemail@exemplo.com"
+                  value={cpf}
+                  onChange={(e) => handleCpfChange(e.target.value)}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
                   className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
                     theme === "dark"
                       ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
@@ -327,6 +318,26 @@ export default function LoginPage() {
                 />
               </div>
             )}
+
+            <div>
+              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
+                theme === "dark" ? "text-slate-400" : "text-slate-500"
+              }`}>
+                E-mail
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seuemail@exemplo.com"
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
+                  theme === "dark"
+                    ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
+                    : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
+                }`}
+              />
+            </div>
 
             <div>
               <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
@@ -386,7 +397,7 @@ export default function LoginPage() {
           }`}>
             <span className="text-[10px] font-bold uppercase block mb-1 text-cyan-400">Dica de Acesso Rápido</span>
             <p className="text-xs font-semibold leading-relaxed">
-              CPF de teste: <span className="font-mono text-blue-400 select-all">12345678900</span> &bull; Senha: <span className="font-mono text-blue-400 select-all">admin123</span>
+              E-mail de teste: <span className="font-mono text-blue-400 select-all">admin@finseven.com</span> &bull; Senha: <span className="font-mono text-blue-400 select-all">admin123</span>
             </p>
           </div>
         )}
