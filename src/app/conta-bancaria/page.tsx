@@ -311,6 +311,8 @@ export default function ContaBancariaPage() {
             router.push("/investimentos");
           } else if (menu === "Conta Bancária") {
             setActiveMenu("Conta Bancária");
+          } else if (menu === "Categorias") {
+            router.push("/categorias");
           } else {
             router.push("/?menu=" + menu);
           }
