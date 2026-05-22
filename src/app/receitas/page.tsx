@@ -531,7 +531,6 @@ function ReceitasContent() {
             onDeleteClick={handleDeleteTransaction}
             formatCurrency={formatCurrency}
             formatDateForDisplay={formatDateForDisplay}
-            onQuickAddClick={(type) => router.push("/lancamento?type=" + type)}
           />
         </div>
       </main>

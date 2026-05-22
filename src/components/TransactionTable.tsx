@@ -22,26 +22,28 @@ export default function TransactionTable({
           <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>Listagem de movimentações financeiras recentes no sistema.</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => onQuickAddClick("Receitas")}
-            className="bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
-          >
-            + Receita
-          </button>
-          <button 
-            onClick={() => onQuickAddClick("Despesas")}
-            className="bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
-          >
-            + Despesa
-          </button>
-          <button 
-            onClick={() => onQuickAddClick("Investimentos")}
-            className="bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/20 text-cyan-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
-          >
-            + Investimento
-          </button>
-        </div>
+        {onQuickAddClick && (
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onQuickAddClick("Receitas")}
+              className="bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
+            >
+              + Receita
+            </button>
+            <button 
+              onClick={() => onQuickAddClick("Despesas")}
+              className="bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
+            >
+              + Despesa
+            </button>
+            <button 
+              onClick={() => onQuickAddClick("Investimentos")}
+              className="bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/20 text-cyan-400 text-xs font-semibold px-3 py-2 rounded-xl transition-all cursor-pointer"
+            >
+              + Investimento
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`w-full overflow-x-auto rounded-xl border ${

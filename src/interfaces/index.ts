@@ -53,7 +53,7 @@ export interface TransactionTableProps {
   onDeleteClick: (id: string) => void;
   formatCurrency: (val: number) => string;
   formatDateForDisplay: (dateStr: string) => string;
-  onQuickAddClick: (type: "Receitas" | "Despesas" | "Investimentos") => void;
+  onQuickAddClick?: (type: "Receitas" | "Despesas" | "Investimentos") => void;
 }
 
 export interface AddModalProps {
