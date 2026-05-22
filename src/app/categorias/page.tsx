@@ -17,33 +17,16 @@ const generateMockTransactions = (): Transaction[] => {
   let idCounter = 1;
 
   const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
-  const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
-  const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
-  const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];
-
-  const descReceitas = [
-    ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
-    ["Projeto Freelance", "Consultoria Técnica", "Desenvolvimento Web"],
-    ["Rendimento FIIs", "Dividendos Ações", "Aplicação Renda Fixa"],
-    ["Reembolso Despesas", "Venda de Usado", "Bônus Anual"]
+  
+  const categoriesReceitas = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer"];
+  const categoriesDespesas = [
+    "Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", 
+    "Lazer", "Água", "Luz", "Internet", "Aluguel"
   ];
-
-  const descDespesas = [
-    ["Compras Mensais", "Feira de Orgânicos", "Padaria e Lanches"],
-    ["Aluguel Residencial", "Condomínio", "Conta de Luz e Água"],
-    ["Combustível", "Mensalidade Metrô", "Aplicativo de Corrida"],
-    ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
-    ["Consulta Médica", "Farmácia", "Exames Clínicos"],
-    ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
-  ];
-
-  const descInvestimentos = [
-    ["Tesouro IPCA+ 2029", "Tesouro Selic 2027", "Tesouro Prefixado 2031"],
-    ["Ações ITUB4", "Ações VALE3", "Ações PETR4"],
-    ["Cotas MXRF11", "Cotas HGLG11", "Cotas KNRI11"],
-    ["Compra Bitcoin", "Compra Ethereum", "Aporte Cripto Basket"],
-    ["CDB Liquidez Diária", "LCI 90% CDI", "Debêntures Incentivadas"],
-    ["Aporte Fundo Multimercado", "Previdência Privada", "Investimento Internacional"]
+  const categoriesInvestimentos = [
+    "Tesouro Direto", "CDB (Certificado de Depósito Bancário)", 
+    "LCI e LCA", "Poupança", "Debênture",
+    "Ações", "Fundos Imobiliários (FIIs)", "ETFs", "BDRs", "Criptomoedas"
   ];
 
   for (let year = startYear; year <= endYear; year++) {
@@ -53,68 +36,77 @@ const generateMockTransactions = (): Transaction[] => {
     for (let month = minM; month <= maxM; month++) {
       const padMonth = String(month + 1).padStart(2, "0");
 
-      for (let i = 0; i < 3; i++) {
-        const dayReceita = String(5 + i * 7).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayReceita}`;
-        
-        const catIdx = (year + month + i) % categoriesReceitas.length;
-        const cat = categoriesReceitas[catIdx];
-        const descList = descReceitas[catIdx];
-        const desc = descList[i % descList.length];
-        const value = 2000 + ((year - startYear) * 300) + (month * 50) + (i * 250);
-
+      // Generate 2 records for each Receitas category
+      categoriesReceitas.forEach((cat, index) => {
+        // Record 1
         list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
+          id: `tx-rec-${idCounter++}`,
+          date: `${year}-${padMonth}-05`,
           category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: value,
+          description: `${cat} Quinzenal A`,
+          account: accounts[(index * 2) % accounts.length],
+          value: 1200 + (month * 10) + (index * 150),
           type: "Receitas"
         });
-      }
-
-      for (let i = 0; i < 3; i++) {
-        const dayDespesa = String(10 + i * 8).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayDespesa}`;
-
-        const catIdx = (year + month + i) % categoriesDespesas.length;
-        const cat = categoriesDespesas[catIdx];
-        const descList = descDespesas[catIdx];
-        const desc = descList[i % descList.length];
-        const value = 150 + (month * 15) + (i * 120);
-
+        // Record 2
         list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
+          id: `tx-rec-${idCounter++}`,
+          date: `${year}-${padMonth}-20`,
           category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: -value,
+          description: `${cat} Quinzenal B`,
+          account: accounts[(index * 2 + 1) % accounts.length],
+          value: 1500 + (month * 15) + (index * 200),
+          type: "Receitas"
+        });
+      });
+
+      // Generate 2 records for each Despesas category
+      categoriesDespesas.forEach((cat, index) => {
+        // Record 1
+        list.push({
+          id: `tx-des-${idCounter++}`,
+          date: `${year}-${padMonth}-10`,
+          category: cat,
+          description: `Pagamento ${cat} A`,
+          account: accounts[(index * 3) % accounts.length],
+          value: -(100 + (month * 5) + (index * 45)),
           type: "Despesas"
         });
-      }
-
-      for (let i = 0; i < 3; i++) {
-        const dayInvest = String(15 + i * 6).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayInvest}`;
-
-        const catIdx = (year + month + i) % categoriesInvestimentos.length;
-        const cat = categoriesInvestimentos[catIdx];
-        const descList = descInvestimentos[catIdx];
-        const desc = descList[i % descList.length];
-        const value = 200 + (month * 20) + (i * 150);
-
+        // Record 2
         list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
+          id: `tx-des-${idCounter++}`,
+          date: `${year}-${padMonth}-25`,
           category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: value,
+          description: `Consumo ${cat} B`,
+          account: accounts[(index * 3 + 1) % accounts.length],
+          value: -(120 + (month * 7) + (index * 60)),
+          type: "Despesas"
+        });
+      });
+
+      // Generate 2 records for each Investimentos category
+      categoriesInvestimentos.forEach((cat, index) => {
+        // Record 1
+        list.push({
+          id: `tx-inv-${idCounter++}`,
+          date: `${year}-${padMonth}-15`,
+          category: cat,
+          description: `Aporte ${cat} Inicial`,
+          account: accounts[(index * 4) % accounts.length],
+          value: 300 + (month * 20) + (index * 100),
           type: "Investimentos"
         });
-      }
+        // Record 2
+        list.push({
+          id: `tx-inv-${idCounter++}`,
+          date: `${year}-${padMonth}-28`,
+          category: cat,
+          description: `Aporte ${cat} Complementar`,
+          account: accounts[(index * 4 + 1) % accounts.length],
+          value: 450 + (month * 25) + (index * 150),
+          type: "Investimentos"
+        });
+      });
     }
   }
 
@@ -191,7 +183,14 @@ export default function CategoriasPage() {
     const savedTxs = localStorage.getItem("finseven-transactions");
     if (savedTxs) {
       try {
-        setTransactions(JSON.parse(savedTxs));
+        const parsed = JSON.parse(savedTxs) as Transaction[];
+        // Upgrade legacy mock dataset to the new high-density categories dataset
+        const hasNewMockData = parsed.some(tx => tx.id.startsWith("tx-rec-"));
+        if (!hasNewMockData) {
+          setTransactions(INITIAL_TRANSACTIONS);
+        } else {
+          setTransactions(parsed);
+        }
       } catch (e) {
         setTransactions(INITIAL_TRANSACTIONS);
       }
