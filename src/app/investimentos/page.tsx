@@ -344,6 +344,8 @@ function InvestimentosContent() {
             router.push("/despesas");
           } else if (menu === "Investimentos") {
             setActiveMenu("Investimentos");
+          } else if (menu === "Conta Bancária") {
+            router.push("/conta-bancaria");
           } else {
             router.push("/?menu=" + menu);
           }

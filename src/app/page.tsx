@@ -374,6 +374,8 @@ export default function Home() {
             router.push("/despesas");
           } else if (menu === "Investimentos") {
             router.push("/investimentos");
+          } else if (menu === "Conta Bancária") {
+            router.push("/conta-bancaria");
           } else {
             setActiveMenu(menu);
           }
