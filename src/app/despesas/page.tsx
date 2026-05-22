@@ -442,7 +442,8 @@ function DespesasContent() {
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     onBlur={(e) => setStartDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-rose-500 select-text ${
+                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-rose-500 select-text cursor-pointer ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"
@@ -460,7 +461,8 @@ function DespesasContent() {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     onBlur={(e) => setEndDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-rose-500 select-text ${
+                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-rose-500 select-text cursor-pointer ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"

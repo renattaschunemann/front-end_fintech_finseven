@@ -25,13 +25,8 @@ export default function Sidebar({
               <img 
                 src="/logo.png" 
                 alt="FinSeven Logo" 
-                className="h-[63px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
+                className="h-[72px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
               />
-              <p className={`text-xs font-bold uppercase tracking-[0.05em] leading-none pl-1 mt-2 transition-colors ${
-                theme === "dark" ? "text-cyan-400" : "text-cyan-600"
-              }`}>
-                Gestão de Finanças Pessoais
-              </p>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="xl:hidden p-1.5 rounded-lg text-slate-400 hover:bg-slate-800/50 hover:text-slate-100">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

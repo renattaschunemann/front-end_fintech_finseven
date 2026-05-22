@@ -133,7 +133,8 @@ export default function EditModal({
                 required
                 value={formDate}
                 onChange={(e) => setFormDate(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer ${
                   theme === "dark" 
                     ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                     : "bg-slate-50 border-slate-200 text-slate-800"
