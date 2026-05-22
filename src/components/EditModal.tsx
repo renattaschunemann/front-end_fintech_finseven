@@ -47,43 +47,19 @@ export default function EditModal({
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className={`text-xs font-bold uppercase tracking-wider block mb-2 ${
+            <label className={`text-xs font-bold uppercase tracking-wider block mb-2.5 ${
               theme === "dark" ? "text-slate-400" : "text-slate-500"
             }`}>Tipo de Fluxo</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormType("Receitas");
-                  setFormCategory("Receitas");
-                }}
-                className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                  formType === "Receitas"
-                    ? "bg-emerald-600/15 border-emerald-500/40 text-emerald-400 glowGreen"
-                    : theme === "dark"
-                    ? "bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800/40"
-                    : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200/50"
-                }`}
-              >
-                Receita (+)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setFormType("Despesas");
-                  setFormCategory("Despesas");
-                }}
-                className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                  formType === "Despesas"
-                    ? "bg-rose-600/15 border-rose-500/40 text-rose-400 glowRed"
-                    : theme === "dark"
-                    ? "bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800/40"
-                    : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200/50"
-                }`}
-              >
-                Despesa (-)
-              </button>
+            <div className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all w-fit ${
+              formType === "Receitas"
+                ? "bg-emerald-600/15 border-emerald-500/40 text-emerald-400 glowGreen"
+                : formType === "Investimentos"
+                ? "bg-cyan-600/15 border-cyan-500/40 text-cyan-400 glowCyan"
+                : "bg-rose-600/15 border-rose-500/40 text-rose-400 glowRed"
+            }`}>
+              {formType === "Receitas" && "Receita (+)"}
+              {formType === "Despesas" && "Despesa (-)"}
+              {formType === "Investimentos" && "Investimento"}
             </div>
           </div>
 
@@ -178,8 +154,18 @@ export default function EditModal({
                   <>
                     <option value="Receitas">Receitas</option>
                     <option value="Salário">Salário</option>
-                    <option value="Investimentos">Investimentos</option>
                     <option value="Freelance">Freelance</option>
+                    <option value="Rendimentos">Rendimentos</option>
+                    <option value="Outros">Outros</option>
+                  </>
+                ) : formType === "Investimentos" ? (
+                  <>
+                    <option value="Investimentos">Investimentos</option>
+                    <option value="Ações">Ações</option>
+                    <option value="FIIs">FIIs</option>
+                    <option value="Renda Fixa">Renda Fixa</option>
+                    <option value="Cripto">Cripto</option>
+                    <option value="Outros">Outros</option>
                   </>
                 ) : (
                   <>
@@ -188,6 +174,9 @@ export default function EditModal({
                     <option value="Supermercado">Supermercado</option>
                     <option value="Aluguel">Aluguel</option>
                     <option value="Lazer">Lazer</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Saúde">Saúde</option>
+                    <option value="Outros">Outros</option>
                   </>
                 )}
               </select>
