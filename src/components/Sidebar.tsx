@@ -25,10 +25,10 @@ export default function Sidebar({
               <img 
                 src="/logo.png" 
                 alt="FinSeven Logo" 
-                className="h-[54.75px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
+                className="h-[63px] w-auto object-contain drop-shadow-[0_0_8px_rgba(34,211,238,0.25)] hover:scale-102 transition-transform duration-300"
               />
-              <p className={`text-[10px] font-bold uppercase tracking-[0.05em] leading-none pl-1 mt-1.5 transition-colors ${
-                theme === "dark" ? "text-cyan-500" : "text-cyan-600"
+              <p className={`text-xs font-bold uppercase tracking-[0.05em] leading-none pl-1 mt-2 transition-colors ${
+                theme === "dark" ? "text-cyan-400" : "text-cyan-600"
               }`}>
                 Gestão de Finanças Pessoais
               </p>
