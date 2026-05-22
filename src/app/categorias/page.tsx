@@ -167,13 +167,6 @@ export default function CategoriasPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Quick Launch Form State
-  const [quickDesc, setQuickDesc] = useState("");
-  const [quickValue, setQuickValue] = useState("");
-  const [quickDate, setQuickDate] = useState("2026-05-22");
-  const [quickAccount, setQuickAccount] = useState("NuBank");
-  const [registeredAccounts, setRegisteredAccounts] = useState<any[]>([]);
-
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
   // Load transactions, custom categories, theme and bank accounts
@@ -204,18 +197,6 @@ export default function CategoriasPage() {
       }
     } else {
       setTransactions(INITIAL_TRANSACTIONS);
-    }
-
-    // 4. Bank Accounts
-    const savedAccounts = localStorage.getItem("finseven-bank-accounts");
-    if (savedAccounts) {
-      try {
-        const parsed = JSON.parse(savedAccounts);
-        setRegisteredAccounts(parsed);
-        if (parsed.length > 0) {
-          setQuickAccount(parsed[0].bankName);
-        }
-      } catch (e) {}
     }
 
     setIsLoaded(true);
@@ -343,43 +324,6 @@ export default function CategoriasPage() {
     setWritingCustom(false);
     setCustomCategoryName("");
     showToast(`Categoria "${cleanName}" cadastrada com sucesso!`, "success");
-  };
-
-  // Quick Launch (Novo Lançamento Rápido)
-  const handleQuickLaunch = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const valNum = parseFloat(quickValue.replace(",", "."));
-    if (isNaN(valNum) || valNum <= 0) {
-      showToast("Por favor, informe um valor válido.", "error");
-      return;
-    }
-
-    if (
-      selectedCategory === "Outras fontes" ||
-      selectedCategory === "Outras fontes de despesa" ||
-      selectedCategory === "Outras fontes de investimento"
-    ) {
-      showToast("Por favor, salve a categoria customizada antes de lançar.", "error");
-      return;
-    }
-
-    const newTx: Transaction = {
-      id: "tx-quick-" + Date.now(),
-      date: quickDate,
-      category: selectedCategory,
-      description: quickDesc.trim() || `${selectedType === "Receitas" ? "Receita" : selectedType === "Despesas" ? "Despesa" : "Investimento"} em ${selectedCategory}`,
-      account: quickAccount,
-      value: selectedType === "Despesas" ? -valNum : valNum,
-      type: selectedType
-    };
-
-    setTransactions([newTx, ...transactions]);
-    showToast("Lançamento rápido cadastrado com sucesso!", "success");
-
-    // Reset Form
-    setQuickDesc("");
-    setQuickValue("");
   };
 
   // Date window filters calculator
@@ -536,9 +480,9 @@ export default function CategoriasPage() {
           </div>
 
           {/* Form Rows */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Side: Category Config */}
-            <div className={`lg:col-span-6 backdrop-blur-md border rounded-2xl p-6 shadow-md transition-all ${
+          <div className="flex justify-center w-full">
+            {/* Category Config */}
+            <div className={`w-full max-w-2xl backdrop-blur-md border rounded-2xl p-6 shadow-md transition-all ${
               theme === "dark" ? "bg-[#101422]/70 border-slate-800/40 shadow-2xl shadow-black/30" : "bg-white border-slate-200 shadow-sm"
             }`}>
               <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-850/50">
@@ -710,148 +654,6 @@ export default function CategoriasPage() {
                   </form>
                 )}
               </div>
-            </div>
-
-            {/* Right Side: Novo Lançamento Rápido Form */}
-            <div className={`lg:col-span-6 backdrop-blur-md border rounded-2xl p-6 shadow-md transition-all ${
-              theme === "dark" ? "bg-[#101422]/70 border-slate-800/40 shadow-2xl shadow-black/30" : "bg-white border-slate-200 shadow-sm"
-            }`}>
-              <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-850/50">
-                <div className={`p-1.5 rounded-lg ${
-                  selectedType === "Receitas"
-                    ? theme === "dark" ? "bg-emerald-500/10 text-emerald-450" : "bg-emerald-50 text-emerald-600"
-                    : selectedType === "Despesas"
-                    ? theme === "dark" ? "bg-rose-500/10 text-rose-450" : "bg-rose-50 text-rose-600"
-                    : theme === "dark" ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-50 text-cyan-600"
-                }`}>
-                  <svg className="w-5 h-5 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className={`text-base font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
-                  Lançamento Rápido: <span className="underline">{selectedCategory}</span>
-                </h3>
-              </div>
-
-              <form onSubmit={handleQuickLaunch} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Value Input */}
-                  <div>
-                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-500"
-                    }`}>
-                      Valor (R$)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      required
-                      value={quickValue}
-                      onChange={(e) => setQuickValue(e.target.value)}
-                      placeholder="0,00"
-                      className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                        theme === "dark"
-                          ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
-                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                      }`}
-                    />
-                  </div>
-
-                  {/* Date Input */}
-                  <div>
-                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-500"
-                    }`}>
-                      Data
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={quickDate}
-                      onChange={(e) => setQuickDate(e.target.value)}
-                      onClick={(e) => (e.currentTarget as any).showPicker?.()}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none cursor-pointer ${
-                        theme === "dark"
-                          ? "bg-[#070b13] border-slate-800/70 text-slate-250 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
-                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Account Select */}
-                  <div>
-                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-500"
-                    }`}>
-                      Conta Financeira
-                    </label>
-                    <select
-                      value={quickAccount}
-                      onChange={(e) => setQuickAccount(e.target.value)}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none cursor-pointer ${
-                        theme === "dark"
-                          ? "bg-[#070b13] border-slate-800/70 text-slate-250 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
-                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200"
-                      }`}
-                    >
-                      {registeredAccounts.length > 0 ? (
-                        registeredAccounts.map((acc) => (
-                          <option key={acc.id} value={acc.bankName}>
-                            {acc.bankName}
-                          </option>
-                        ))
-                      ) : (
-                        ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"].map((acc) => (
-                          <option key={acc} value={acc}>
-                            {acc}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-
-                  {/* Description Input */}
-                  <div>
-                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-500"
-                    }`}>
-                      Descrição (Opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={quickDesc}
-                      onChange={(e) => setQuickDesc(e.target.value)}
-                      placeholder="Ex: Depósito, Aporte, Aluguel"
-                      className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                        theme === "dark"
-                          ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
-                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={
-                    selectedCategory === "Outras fontes" || 
-                    selectedCategory === "Outras fontes de despesa" || 
-                    selectedCategory === "Outras fontes de investimento"
-                  }
-                  className={`w-full font-bold py-3.5 px-4 rounded-xl text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] cursor-pointer mt-4 ${
-                    selectedCategory === "Outras fontes" || 
-                    selectedCategory === "Outras fontes de despesa" || 
-                    selectedCategory === "Outras fontes de investimento"
-                      ? "bg-slate-700 text-slate-400 cursor-not-allowed shadow-none"
-                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20"
-                  }`}
-                >
-                  Cadastrar Lançamento Rápido
-                </button>
-              </form>
             </div>
           </div>
 
