@@ -58,6 +58,13 @@ export default function ContaBancariaPage() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
+  useEffect(() => {
+    const loggedUser = localStorage.getItem("finseven-logged-user");
+    if (!loggedUser) {
+      router.push("/login");
+    }
+  }, [router]);
+
   // Load registered bank accounts & theme
   useEffect(() => {
     const savedAccounts = localStorage.getItem("finseven-bank-accounts");
@@ -313,6 +320,8 @@ export default function ContaBancariaPage() {
             setActiveMenu("Conta Bancária");
           } else if (menu === "Categorias") {
             router.push("/categorias");
+          } else if (menu === "Perfil") {
+            router.push("/perfil");
           } else {
             router.push("/?menu=" + menu);
           }

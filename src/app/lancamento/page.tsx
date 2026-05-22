@@ -26,6 +26,13 @@ function LancamentoContent() {
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
   useEffect(() => {
+    const loggedUser = localStorage.getItem("finseven-logged-user");
+    if (!loggedUser) {
+      router.push("/login");
+    }
+  }, [router]);
+
+  useEffect(() => {
     const saved = localStorage.getItem("finseven-transactions");
     if (saved) {
       try {
@@ -174,6 +181,8 @@ function LancamentoContent() {
             router.push("/conta-bancaria");
           } else if (menu === "Categorias") {
             router.push("/categorias");
+          } else if (menu === "Perfil") {
+            router.push("/perfil");
           } else {
             router.push("/?menu=" + menu);
           }

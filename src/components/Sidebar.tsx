@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./Sidebar.css";
 import { SidebarProps } from "@/interfaces";
+import { useRouter } from "next/navigation";
 
 export default function Sidebar({
   sidebarOpen,
@@ -12,6 +13,20 @@ export default function Sidebar({
   theme,
   showToast,
 }: SidebarProps) {
+  const router = useRouter();
+  const [loggedUser, setLoggedUser] = useState<{ name: string; cpf: string; email: string } | null>(null);
+
+  useEffect(() => {
+    const userJson = localStorage.getItem("finseven-logged-user");
+    if (userJson) {
+      try {
+        setLoggedUser(JSON.parse(userJson));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
+
   return (
     <>
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r flex flex-col justify-between transition-all duration-300 xl:translate-x-0 xl:static xl:shrink-0 ${
@@ -70,6 +85,11 @@ export default function Sidebar({
               { name: "Categorias", label: "Categorias", icon: (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+              )},
+              { name: "Perfil", label: "Meu Perfil", icon: (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               )},
               { name: "Relatórios", label: "Relatórios", icon: (
@@ -131,6 +151,32 @@ export default function Sidebar({
         </div>
 
         <div className="p-4 border-t border-slate-800/40 space-y-1">
+          {loggedUser && (
+            <div 
+              onClick={() => {
+                showToast("Abrindo perfil do usuário...", "info");
+                router.push("/perfil");
+              }}
+              className={`flex items-center gap-3 p-3 rounded-xl mb-3 cursor-pointer transition-all border ${
+                theme === "dark" 
+                  ? "bg-[#0b0f19]/40 border-slate-800/40 hover:bg-[#101422]/60 hover:border-slate-700/60" 
+                  : "bg-slate-50 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300"
+              }`}
+            >
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-bold flex items-center justify-center text-sm shadow-md shadow-blue-500/10 shrink-0">
+                {loggedUser.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className={`text-xs font-bold truncate ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
+                  {loggedUser.name}
+                </p>
+                <p className="text-[10px] text-slate-500 truncate font-semibold">
+                  {loggedUser.email}
+                </p>
+              </div>
+            </div>
+          )}
+
           <button 
             onClick={() => showToast("Abrindo configurações...", "info")} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium transition-all ${
@@ -145,7 +191,11 @@ export default function Sidebar({
           </button>
 
           <button 
-            onClick={() => showToast("Saindo do sistema...", "error")} 
+            onClick={() => {
+              localStorage.removeItem("finseven-logged-user");
+              showToast("Sessão encerrada com sucesso!", "success");
+              router.push("/login");
+            }} 
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 transition-all"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

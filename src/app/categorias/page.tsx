@@ -161,6 +161,13 @@ export default function CategoriasPage() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
+  useEffect(() => {
+    const loggedUser = localStorage.getItem("finseven-logged-user");
+    if (!loggedUser) {
+      router.push("/login");
+    }
+  }, [router]);
+
   // Load transactions, custom categories, theme and bank accounts
   useEffect(() => {
     // 1. Theme
@@ -436,6 +443,8 @@ export default function CategoriasPage() {
             router.push("/conta-bancaria");
           } else if (menu === "Categorias") {
             setActiveMenu("Categorias");
+          } else if (menu === "Perfil") {
+            router.push("/perfil");
           } else {
             router.push("/?menu=" + menu);
           }
