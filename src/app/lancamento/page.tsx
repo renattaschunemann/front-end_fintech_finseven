@@ -168,6 +168,8 @@ function LancamentoContent() {
             router.push("/receitas");
           } else if (menu === "Despesas") {
             router.push("/despesas");
+          } else if (menu === "Investimentos") {
+            router.push("/investimentos");
           } else {
             router.push("/?menu=" + menu);
           }

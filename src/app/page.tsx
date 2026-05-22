@@ -22,6 +22,7 @@ const generateMockTransactions = (): Transaction[] => {
   const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
   const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
   const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
+  const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];
 
   const descReceitas = [
     ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
@@ -37,6 +38,15 @@ const generateMockTransactions = (): Transaction[] => {
     ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
     ["Consulta Médica", "Farmácia", "Exames Clínicos"],
     ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
+  ];
+
+  const descInvestimentos = [
+    ["Tesouro IPCA+ 2029", "Tesouro Selic 2027", "Tesouro Prefixado 2031"],
+    ["Ações ITUB4", "Ações VALE3", "Ações PETR4"],
+    ["Cotas MXRF11", "Cotas HGLG11", "Cotas KNRI11"],
+    ["Compra Bitcoin", "Compra Ethereum", "Aporte Cripto Basket"],
+    ["CDB Liquidez Diária", "LCI 90% CDI", "Debêntures Incentivadas"],
+    ["Aporte Fundo Multimercado", "Previdência Privada", "Investimento Internacional"]
   ];
 
   for (let year = startYear; year <= endYear; year++) {
@@ -87,6 +97,27 @@ const generateMockTransactions = (): Transaction[] => {
           type: "Despesas"
         });
       }
+
+      for (let i = 0; i < 3; i++) {
+        const dayInvest = String(15 + i * 6).padStart(2, "0");
+        const dateStr = `${year}-${padMonth}-${dayInvest}`;
+
+        const catIdx = (year + month + i) % categoriesInvestimentos.length;
+        const cat = categoriesInvestimentos[catIdx];
+        const descList = descInvestimentos[catIdx];
+        const desc = descList[i % descList.length];
+        const value = 200 + (month * 20) + (i * 150);
+
+        list.push({
+          id: `tx-gen-${idCounter++}`,
+          date: dateStr,
+          category: cat,
+          description: desc,
+          account: accounts[idCounter % accounts.length],
+          value: value,
+          type: "Investimentos"
+        });
+      }
     }
   }
 
@@ -128,7 +159,8 @@ export default function Home() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.length < 10) {
+        const hasInvestments = parsed.some((t: any) => t.type === "Investimentos");
+        if (parsed.length < 10 || !hasInvestments) {
           setTransactions(INITIAL_TRANSACTIONS);
         } else {
           setTransactions(parsed);
@@ -340,6 +372,8 @@ export default function Home() {
             router.push("/receitas");
           } else if (menu === "Despesas") {
             router.push("/despesas");
+          } else if (menu === "Investimentos") {
+            router.push("/investimentos");
           } else {
             setActiveMenu(menu);
           }

@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import TransactionTable from "@/components/TransactionTable";
 import EditModal from "@/components/EditModal";
 
-function ReceitasContent() {
+function InvestimentosContent() {
   const router = useRouter();
   const generateMockTransactions = (): Transaction[] => {
     const list: Transaction[] = [];
@@ -128,7 +128,7 @@ function ReceitasContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [activeMenu, setActiveMenu] = useState("Receitas");
+  const [activeMenu, setActiveMenu] = useState("Investimentos");
 
   const [activeFilter, setActiveFilter] = useState<"30" | "69" | "90" | "custom" | "all">("all");
   const [startDate, setStartDate] = useState("");
@@ -137,8 +137,8 @@ function ReceitasContent() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Receitas");
-  const [formCategory, setFormCategory] = useState("Receitas");
+  const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Investimentos");
+  const [formCategory, setFormCategory] = useState("Investimentos");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
@@ -219,7 +219,7 @@ function ReceitasContent() {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return transactions.filter(t => {
-      if (t.type !== "Receitas") return false;
+      if (t.type !== "Investimentos") return false;
 
       if (activeFilter === "all") return true;
 
@@ -294,7 +294,7 @@ function ReceitasContent() {
       category: formCategory,
       description: formDescription,
       account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
+      value: formType === "Receitas" ? valNum : formType === "Despesas" ? -valNum : valNum,
       type: formType
     };
     setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
@@ -339,11 +339,11 @@ function ReceitasContent() {
           } else if (menu === "Lançamento") {
             router.push("/lancamento");
           } else if (menu === "Receitas") {
-            setActiveMenu("Receitas");
+            router.push("/receitas");
           } else if (menu === "Despesas") {
             router.push("/despesas");
           } else if (menu === "Investimentos") {
-            router.push("/investimentos");
+            setActiveMenu("Investimentos");
           } else {
             router.push("/?menu=" + menu);
           }
@@ -356,7 +356,7 @@ function ReceitasContent() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento?type=Receitas")}
+          onAddClick={() => router.push("/lancamento?type=Investimentos")}
           showToast={showToast}
         />
 
@@ -366,24 +366,24 @@ function ReceitasContent() {
               <h1 className={`text-2xl font-extrabold tracking-tight ${
                 theme === "dark" ? "text-white" : "text-slate-900"
               }`}>
-                Minhas Receitas
+                Meus Investimentos
               </h1>
               <p className={`text-xs mt-1 ${
                 theme === "dark" ? "text-slate-400" : "text-slate-500"
               }`}>
-                Gerencie e filtre todos os seus fluxos de receita recebidos.
+                Gerencie e acompanhe o crescimento e aportes de sua carteira de investimentos.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-4 shadow-lg border border-emerald-400/20 w-full md:w-80 group relative overflow-hidden glowGreen">
+            <div className="bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-2xl p-4 shadow-lg border border-cyan-400/20 w-full md:w-80 group relative overflow-hidden glowCyan">
               <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-115 transition-transform duration-300">
                 <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div className="space-y-1 relative z-10">
-                <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest opacity-90">
-                  Total Recebido no Período
+                <p className="text-[10px] font-bold text-cyan-100 uppercase tracking-widest opacity-90">
+                  Total Investido no Período
                 </p>
                 <p className="text-xl sm:text-2xl font-black text-white tracking-tight">
                   {formatCurrency(totalPeriodo)}
@@ -420,7 +420,7 @@ function ReceitasContent() {
                     }}
                     className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                       activeFilter === f.id
-                        ? "bg-emerald-600/15 border-emerald-500/45 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+                        ? "bg-cyan-600/15 border-cyan-500/45 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]"
                         : theme === "dark"
                         ? "bg-[#070b13] border-slate-800/50 hover:bg-slate-800/30 text-slate-400 hover:text-slate-250"
                         : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-850"
@@ -442,7 +442,7 @@ function ReceitasContent() {
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     onBlur={(e) => setStartDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 select-text ${
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-cyan-500 select-text ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"
@@ -460,7 +460,7 @@ function ReceitasContent() {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     onBlur={(e) => setEndDate(e.target.value)}
-                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-emerald-500 select-text ${
+                    className={`w-full sm:w-40 border rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-cyan-500 select-text ${
                       theme === "dark" 
                         ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
                         : "bg-slate-50 border-slate-200 text-slate-800"
@@ -516,7 +516,7 @@ function ReceitasContent() {
                     setActiveFilter("custom");
                     showToast("Filtro personalizado de data aplicado!", "success");
                   }}
-                  className={`w-full sm:w-auto py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-lg transition-all duration-200 cursor-pointer text-center bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20 hover:scale-[1.02]`}
+                  className={`w-full sm:w-auto py-2.5 px-5 rounded-xl text-xs font-bold text-white shadow-lg transition-all duration-200 cursor-pointer text-center bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/20 hover:scale-[1.02]`}
                 >
                   Buscar
                 </button>
@@ -582,14 +582,14 @@ function ReceitasContent() {
   );
 }
 
-export default function ReceitasPage() {
+export default function InvestimentosPage() {
   return (
     <Suspense fallback={
       <div className="h-screen w-screen flex items-center justify-center bg-[#0b0f19] text-slate-400">
-        Carregando receitas...
+        Carregando investimentos...
       </div>
     }>
-      <ReceitasContent />
+      <InvestimentosContent />
     </Suspense>
   );
 }
