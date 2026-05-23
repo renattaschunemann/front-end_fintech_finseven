@@ -191,12 +191,19 @@ export default function CategoriasPage() {
     if (savedTxs) {
       try {
         const parsed = JSON.parse(savedTxs) as Transaction[];
+        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
+        const sanitized = parsed.map((t: any) => {
+          if (!allowed.includes(t.account)) {
+            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
+          }
+          return t;
+        });
         // Upgrade legacy mock dataset to the new high-density categories dataset
-        const hasNewMockData = parsed.some(tx => tx.id.startsWith("tx-rec-"));
+        const hasNewMockData = sanitized.some(tx => tx.id.startsWith("tx-rec-"));
         if (!hasNewMockData) {
           setTransactions(INITIAL_TRANSACTIONS);
         } else {
-          setTransactions(parsed);
+          setTransactions(sanitized);
         }
       } catch (e) {
         setTransactions(INITIAL_TRANSACTIONS);

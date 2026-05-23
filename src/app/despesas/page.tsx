@@ -173,11 +173,18 @@ function DespesasContent() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const hasInvestments = parsed.some((t: any) => t.type === "Investimentos");
-        if (parsed.length < 10 || !hasInvestments) {
+        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
+        const sanitized = parsed.map((t: any) => {
+          if (!allowed.includes(t.account)) {
+            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
+          }
+          return t;
+        });
+        const hasInvestments = sanitized.some((t: any) => t.type === "Investimentos");
+        if (sanitized.length < 10 || !hasInvestments) {
           setTransactions(initialTxs);
         } else {
-          setTransactions(parsed);
+          setTransactions(sanitized);
         }
       } catch (e) {
         setTransactions(initialTxs);

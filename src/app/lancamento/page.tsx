@@ -53,7 +53,15 @@ function LancamentoContent() {
     const saved = localStorage.getItem("finseven-transactions");
     if (saved) {
       try {
-        setTransactions(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
+        const sanitized = parsed.map((t: any) => {
+          if (!allowed.includes(t.account)) {
+            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
+          }
+          return t;
+        });
+        setTransactions(sanitized);
       } catch (e) {
       }
     }
