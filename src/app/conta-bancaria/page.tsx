@@ -12,7 +12,7 @@ interface BankAccount {
   agency: string;
   accountNumber: string;
   initialBalance: number;
-  accountType: "Conta Corrente" | "Conta Salário";
+  accountType: "Conta Corrente" | "Conta Salário" | "Conta Poupança";
 }
 
 const BANKS = [
@@ -54,7 +54,7 @@ export default function ContaBancariaPage() {
   const [agency, setAgency] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [initialBalance, setInitialBalance] = useState("");
-  const [accountType, setAccountType] = useState<"Conta Corrente" | "Conta Salário">("Conta Corrente");
+  const [accountType, setAccountType] = useState<"Conta Corrente" | "Conta Salário" | "Conta Poupança">("Conta Corrente");
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
@@ -566,7 +566,7 @@ export default function ContaBancariaPage() {
                   }`}>
                     Tipo de Conta
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
                       type="button"
                       onClick={() => setAccountType("Conta Corrente")}
@@ -582,6 +582,23 @@ export default function ContaBancariaPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
                       </svg>
                       <span>Conta Corrente</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("Conta Poupança")}
+                      className={`py-3 px-4 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer border ${
+                        accountType === "Conta Poupança"
+                          ? "bg-amber-600/15 border-amber-500/40 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                          : theme === "dark"
+                          ? "bg-[#070b13] border-slate-800/50 hover:bg-slate-800/30 text-slate-400"
+                          : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Conta Poupança</span>
                     </button>
 
                     <button
@@ -674,6 +691,8 @@ export default function ContaBancariaPage() {
                               <span className={`inline-block px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded ${
                                 account.accountType === "Conta Corrente"
                                   ? theme === "dark" ? "bg-blue-950/40 text-blue-400 border border-blue-800/35" : "bg-blue-50 text-blue-600 border border-blue-200"
+                                  : account.accountType === "Conta Poupança"
+                                  ? theme === "dark" ? "bg-amber-950/40 text-amber-400 border border-amber-800/35" : "bg-amber-50 text-amber-600 border border-amber-200"
                                   : theme === "dark" ? "bg-violet-950/40 text-violet-400 border border-violet-800/35" : "bg-violet-50 text-violet-600 border border-violet-200"
                               }`}>
                                 {account.accountType}
