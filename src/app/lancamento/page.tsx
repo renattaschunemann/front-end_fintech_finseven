@@ -381,7 +381,7 @@ function LancamentoContent() {
                         : "bg-slate-50 border-slate-200 text-slate-800"
                     }`}
                   >
-                    {["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander", "Outros"].map(acc => (
+                    {["Itaú", "Banco do Brasil", "Outros"].map(acc => (
                       <option key={acc} value={acc}>{acc}</option>
                     ))}
                   </select>

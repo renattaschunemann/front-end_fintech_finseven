@@ -19,7 +19,7 @@ function ReceitasContent() {
 
     let idCounter = 1;
 
-    const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
+    const accounts = ["Itaú", "Banco do Brasil"];
     const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
     const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
     const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];

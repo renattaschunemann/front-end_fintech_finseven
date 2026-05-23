@@ -16,7 +16,7 @@ const generateMockTransactions = (): Transaction[] => {
 
   let idCounter = 1;
 
-  const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
+  const accounts = ["Itaú", "Banco do Brasil"];
   
   const categoriesReceitas = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer"];
   const categoriesDespesas = [

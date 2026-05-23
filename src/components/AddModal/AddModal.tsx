@@ -205,10 +205,8 @@ export default function AddModal({
                 }`}
               >
                 <option value="Itaú">Itaú</option>
-                <option value="Bradesco">Bradesco</option>
-                <option value="Caixa Econômica">Caixa Econômica</option>
-                <option value="NuBank">NuBank</option>
-                <option value="Carteira">Carteira</option>
+                <option value="Banco do Brasil">Banco do Brasil</option>
+                <option value="Outros">Outros</option>
               </select>
             </div>
 

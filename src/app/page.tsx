@@ -19,7 +19,7 @@ const generateMockTransactions = (): Transaction[] => {
 
   let idCounter = 1;
 
-  const accounts = ["NuBank", "Itaú", "Bradesco", "Caixa Econômica", "Santander"];
+  const accounts = ["Itaú", "Banco do Brasil"];
   const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
   const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
   const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];
@@ -178,24 +178,87 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("finseven-transactions");
-    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v3");
+    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v4");
     if (saved && mockUpdated === "true") {
       try {
         const parsed = JSON.parse(saved);
         const hasInvestments = parsed.some((t: any) => t.type === "Investimentos");
         if (parsed.length < 10 || !hasInvestments) {
+          const initialAccounts = [
+            {
+              id: "acc-itau",
+              bankName: "Itaú Unibanco",
+              bankCode: "341",
+              agency: "0123",
+              accountNumber: "98765-4",
+              initialBalance: 12500,
+              accountType: "Conta Corrente"
+            },
+            {
+              id: "acc-bb",
+              bankName: "Banco do Brasil S.A",
+              bankCode: "001",
+              agency: "4321",
+              accountNumber: "12345-6",
+              initialBalance: 8500,
+              accountType: "Conta Salário"
+            }
+          ];
+          localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
           setTransactions(INITIAL_TRANSACTIONS);
-          localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
+          localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
         } else {
           setTransactions(parsed);
         }
       } catch (e) {
+        const initialAccounts = [
+          {
+            id: "acc-itau",
+            bankName: "Itaú Unibanco",
+            bankCode: "341",
+            agency: "0123",
+            accountNumber: "98765-4",
+            initialBalance: 12500,
+            accountType: "Conta Corrente"
+          },
+          {
+            id: "acc-bb",
+            bankName: "Banco do Brasil S.A",
+            bankCode: "001",
+            agency: "4321",
+            accountNumber: "12345-6",
+            initialBalance: 8500,
+            accountType: "Conta Salário"
+          }
+        ];
+        localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
         setTransactions(INITIAL_TRANSACTIONS);
-        localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
+        localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
       }
     } else {
+      const initialAccounts = [
+        {
+          id: "acc-itau",
+          bankName: "Itaú Unibanco",
+          bankCode: "341",
+          agency: "0123",
+          accountNumber: "98765-4",
+          initialBalance: 12500,
+          accountType: "Conta Corrente"
+        },
+        {
+          id: "acc-bb",
+          bankName: "Banco do Brasil S.A",
+          bankCode: "001",
+          agency: "4321",
+          accountNumber: "12345-6",
+          initialBalance: 8500,
+          accountType: "Conta Salário"
+        }
+      ];
+      localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
       setTransactions(INITIAL_TRANSACTIONS);
-      localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
+      localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
     }
     setIsLoaded(true);
   }, []);

@@ -67,7 +67,33 @@ export default function ContaBancariaPage() {
 
   // Load registered bank accounts & theme
   useEffect(() => {
-    const savedAccounts = localStorage.getItem("finseven-bank-accounts");
+    let savedAccounts = localStorage.getItem("finseven-bank-accounts");
+    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v4");
+    if (!savedAccounts || mockUpdated !== "true") {
+      const initialAccounts: BankAccount[] = [
+        {
+          id: "acc-itau",
+          bankName: "Itaú Unibanco",
+          bankCode: "341",
+          agency: "0123",
+          accountNumber: "98765-4",
+          initialBalance: 12500,
+          accountType: "Conta Corrente"
+        },
+        {
+          id: "acc-bb",
+          bankName: "Banco do Brasil S.A",
+          bankCode: "001",
+          agency: "4321",
+          accountNumber: "12345-6",
+          initialBalance: 8500,
+          accountType: "Conta Salário"
+        }
+      ];
+      localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
+      savedAccounts = JSON.stringify(initialAccounts);
+    }
+
     if (savedAccounts) {
       try {
         setBankAccounts(JSON.parse(savedAccounts));
