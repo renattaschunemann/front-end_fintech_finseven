@@ -1,13 +1,145 @@
 "use client";
 
-import { HeaderProps } from "@/interfaces";
+import { useState, useEffect, useRef } from "react";
+import { HeaderProps, Transaction } from "@/interfaces";
 
 export default function Header({
   setSidebarOpen,
   theme,
   onAddClick,
   showToast,
+  onDateFilterChange,
 }: HeaderProps) {
+  const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<"today" | "7days" | "30days" | "all">("today");
+
+  const shareRef = useRef<HTMLDivElement>(null);
+  const dateRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (shareRef.current && !shareRef.current.contains(event.target as Node)) {
+        setShareDropdownOpen(false);
+      }
+      if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
+        setDateDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      const url = window.location.origin;
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          showToast("Link do painel copiado com sucesso! Compartilhe com quem quiser.", "success");
+          setShareDropdownOpen(false);
+        })
+        .catch(() => {
+          showToast("Não foi possível copiar o link automaticamente.", "error");
+        });
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (typeof window !== "undefined") {
+      const text = encodeURIComponent(
+        "Ei! Olha só como está o meu painel financeiro do FinSeven! Rápido, intuitivo e moderno. Confere aí!"
+      );
+      window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+      setShareDropdownOpen(false);
+    }
+  };
+
+  const handleShareEmail = () => {
+    if (typeof window !== "undefined") {
+      const subject = encodeURIComponent("Meu Painel de Gestão Financeira FinSeven");
+      const body = encodeURIComponent(
+        "Olá! Estou utilizando o FinSeven para gerenciar minhas despesas, receitas e investimentos com um painel interativo incrível. Venha conferir!"
+      );
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      setShareDropdownOpen(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      const stored = localStorage.getItem("finseven-transactions");
+      let txs: Transaction[] = [];
+      if (stored) {
+        txs = JSON.parse(stored);
+      }
+      
+      if (txs.length === 0) {
+        showToast("Nenhum lançamento encontrado para exportar.", "info");
+        return;
+      }
+
+      // Build CSV content
+      const headers = ["ID", "Data", "Categoria", "Descrição", "Conta Bancária", "Valor (R$)", "Tipo"];
+      const rows = txs.map(t => [
+        t.id,
+        t.date,
+        t.category,
+        t.description,
+        t.account,
+        t.value.toFixed(2),
+        t.type
+      ]);
+
+      // Add UTF-8 BOM so Excel opens special accents correctly
+      const csvContent = "\uFEFF" + [
+        headers.join(";"),
+        ...rows.map(r => r.join(";"))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `extrato_finseven_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast(`Exportação concluída! ${txs.length} lançamentos salvos no arquivo CSV.`, "success");
+    } catch (error) {
+      showToast("Ocorreu um erro ao exportar os dados.", "error");
+    }
+  };
+
+  const handleDateFilterSelect = (filter: "today" | "7days" | "30days" | "all") => {
+    setSelectedFilter(filter);
+    setDateDropdownOpen(false);
+    
+    let message = "Filtrando lançamentos de hoje.";
+    if (filter === "7days") {
+      message = "Filtrando lançamentos dos últimos 7 dias.";
+    } else if (filter === "30days") {
+      message = "Filtrando lançamentos dos últimos 30 dias.";
+    } else if (filter === "all") {
+      message = "Mostrando todos os lançamentos.";
+    }
+
+    showToast(message, "info");
+    if (onDateFilterChange) {
+      onDateFilterChange(filter);
+    }
+  };
+
+  const getFilterLabel = () => {
+    if (selectedFilter === "today") return "Hoje";
+    if (selectedFilter === "7days") return "7 Dias";
+    if (selectedFilter === "30days") return "30 Dias";
+    return "Todos";
+  };
+
   return (
     <header className={`px-6 py-5 border-b flex items-center justify-between sticky top-0 backdrop-blur-md z-20 transition-all ${
       theme === "dark" ? "border-slate-800/40 bg-[#0b0f19]/90" : "border-slate-200 bg-slate-50/90"
@@ -42,22 +174,68 @@ export default function Header({
           </button>
         )}
 
-        <button 
-          onClick={() => showToast("Painel compartilhado!", "success")}
-          className={`border text-xs font-semibold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
-            theme === "dark" 
-              ? "bg-slate-800/50 hover:bg-slate-800 border-slate-700/40 hover:border-slate-700 text-slate-300 hover:text-slate-100" 
-              : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.316-2.158m0 0a3 3 0 10-1.222-2.316L7.462 8.426a3 3 0 100 7.148l4.316 2.158a3 3 0 101.222-2.316" />
-          </svg>
-          <span className="hidden md:inline">Compartilhar</span>
-        </button>
+        {/* Share Button & Dropdown */}
+        <div className="relative" ref={shareRef}>
+          <button 
+            onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
+            className={`border text-xs font-semibold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
+              theme === "dark" 
+                ? "bg-slate-800/50 hover:bg-slate-800 border-slate-700/40 hover:border-slate-700 text-slate-300 hover:text-slate-100" 
+                : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
+            } ${shareDropdownOpen ? (theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300") : ""}`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.316-2.158m0 0a3 3 0 10-1.222-2.316L7.462 8.426a3 3 0 100 7.148l4.316 2.158a3 3 0 101.222-2.316" />
+            </svg>
+            <span className="hidden md:inline">Compartilhar</span>
+          </button>
 
+          {shareDropdownOpen && (
+            <div className={`absolute right-0 mt-2 w-48 rounded-2xl border p-1.5 shadow-xl backdrop-blur-xl z-30 ${
+              theme === "dark" 
+                ? "bg-[#101422]/95 border-slate-800/50 shadow-black/60 text-slate-200" 
+                : "bg-white/95 border-slate-200 shadow-slate-200/55 text-slate-700"
+            }`}>
+              <button 
+                onClick={handleCopyLink}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+                Copiar Link
+              </button>
+              <button 
+                onClick={handleShareWhatsApp}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                WhatsApp
+              </button>
+              <button 
+                onClick={handleShareEmail}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Enviar por E-mail
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Export Button */}
         <button 
-          onClick={() => showToast("Exportando dados em formato XLSX...", "success")}
+          onClick={handleExportCSV}
           className={`border text-xs font-semibold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
             theme === "dark" 
               ? "bg-slate-800/50 hover:bg-slate-800 border-slate-700/40 hover:border-slate-700 text-slate-300 hover:text-slate-100" 
@@ -70,23 +248,60 @@ export default function Header({
           <span className="hidden md:inline">Exportar</span>
         </button>
 
-        <div className="relative">
+        {/* Date Filter (Hoje) Dropdown */}
+        <div className="relative" ref={dateRef}>
           <button 
-            onClick={() => showToast("Modo de filtragem selecionado", "info")}
+            onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
             className={`border text-xs font-semibold px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
               theme === "dark" 
                 ? "bg-slate-800/50 hover:bg-slate-800 border-slate-700/40 hover:border-slate-700 text-slate-300 hover:text-slate-100" 
                 : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
-            }`}
+            } ${dateDropdownOpen ? (theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300") : ""}`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span>Hoje</span>
+            <span className="capitalize">{getFilterLabel()}</span>
             <svg className="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
+
+          {dateDropdownOpen && (
+            <div className={`absolute right-0 mt-2 w-48 rounded-2xl border p-1.5 shadow-xl backdrop-blur-xl z-30 ${
+              theme === "dark" 
+                ? "bg-[#101422]/95 border-slate-800/50 shadow-black/60 text-slate-200" 
+                : "bg-white/95 border-slate-200 shadow-slate-200/55 text-slate-700"
+            }`}>
+              <button 
+                onClick={() => handleDateFilterSelect("today")}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  selectedFilter === "today" ? (theme === "dark" ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-600") : ""
+                } ${theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"}`}
+              >
+                <div className={`h-1.5 w-1.5 rounded-full ${selectedFilter === "today" ? "bg-blue-500" : "bg-transparent"}`} />
+                Hoje
+              </button>
+              <button 
+                onClick={() => handleDateFilterSelect("7days")}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  selectedFilter === "7days" ? (theme === "dark" ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-600") : ""
+                } ${theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"}`}
+              >
+                <div className={`h-1.5 w-1.5 rounded-full ${selectedFilter === "7days" ? "bg-blue-500" : "bg-transparent"}`} />
+                Últimos 7 dias
+              </button>
+              <button 
+                onClick={() => handleDateFilterSelect("30days")}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                  selectedFilter === "30days" ? (theme === "dark" ? "bg-blue-600/20 text-blue-400" : "bg-blue-50 text-blue-600") : ""
+                } ${theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"}`}
+              >
+                <div className={`h-1.5 w-1.5 rounded-full ${selectedFilter === "30days" ? "bg-blue-500" : "bg-transparent"}`} />
+                Últimos 30 dias
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

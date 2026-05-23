@@ -26,7 +26,7 @@ export default function StatsCards({ stats, formatCurrency }: StatsCardsProps) {
           </svg>
         </div>
         <div className="space-y-3 relative z-10">
-          <p className="text-xs font-bold text-emerald-100 uppercase tracking-widest opacity-95">Receitas do Mês</p>
+          <p className="text-xs font-bold text-emerald-100 uppercase tracking-widest opacity-95">{stats.receitasLabel || "Receitas do Mês"}</p>
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{formatCurrency(stats.receitasDoMes)}</p>
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function StatsCards({ stats, formatCurrency }: StatsCardsProps) {
           </svg>
         </div>
         <div className="space-y-3 relative z-10">
-          <p className="text-xs font-bold text-rose-100 uppercase tracking-widest opacity-95">Despesas do Mês</p>
+          <p className="text-xs font-bold text-rose-100 uppercase tracking-widest opacity-95">{stats.despesasLabel || "Despesas do Mês"}</p>
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{formatCurrency(stats.despesasDoMes)}</p>
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function StatsCards({ stats, formatCurrency }: StatsCardsProps) {
           </svg>
         </div>
         <div className="space-y-3 relative z-10">
-          <p className="text-xs font-bold text-cyan-100 uppercase tracking-widest opacity-95">Balanço do Mês</p>
+          <p className="text-xs font-bold text-cyan-100 uppercase tracking-widest opacity-95">{stats.balancoLabel || "Balanço do Mês"}</p>
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{formatCurrency(stats.balancoDoMes)}</p>
         </div>
       </div>

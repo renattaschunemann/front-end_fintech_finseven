@@ -146,6 +146,7 @@ export default function Home() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeMenu, setActiveMenu] = useState("Home");
+  const [dateFilter, setDateFilter] = useState<"today" | "7days" | "30days" | "all">("today");
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
   const [formCategory, setFormCategory] = useState("Despesas");
   const [formDescription, setFormDescription] = useState("");
@@ -228,28 +229,76 @@ export default function Home() {
     });
   };
 
+  const filteredTransactions = useMemo(() => {
+    if (dateFilter === "all") return transactions;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return transactions.filter(t => {
+      const tDate = new Date(t.date + "T00:00:00");
+      const diffTime = today.getTime() - tDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (dateFilter === "today") {
+        return diffDays === 0;
+      }
+      if (dateFilter === "7days") {
+        return diffDays >= 0 && diffDays <= 7;
+      }
+      if (dateFilter === "30days") {
+        return diffDays >= 0 && diffDays <= 30;
+      }
+      return true;
+    });
+  }, [transactions, dateFilter]);
+
   const CARRYOVER_BALANCE = 4631.25;
 
   const stats = useMemo(() => {
-    const currentMonthTxs = transactions.filter(t => t.date.startsWith("2025-12"));
+    const isFiltered = dateFilter !== "all";
+    const targetTxs = isFiltered ? filteredTransactions : transactions.filter(t => t.date.startsWith("2025-12"));
+
     let receitasDoMes = 0;
     let despesasDoMes = 0;
-    currentMonthTxs.forEach(t => {
+    targetTxs.forEach(t => {
       if (t.value > 0) {
         receitasDoMes += t.value;
       } else {
         despesasDoMes += Math.abs(t.value);
       }
     });
+
     const balancoDoMes = receitasDoMes - despesasDoMes;
-    const saldoAtual = CARRYOVER_BALANCE + balancoDoMes;
+    // Current Balance is either calculated on top of carryover or from selected transactions if filtered
+    const saldoAtual = isFiltered ? balancoDoMes : CARRYOVER_BALANCE + balancoDoMes;
+
+    let receitasLabel = "Receitas do Mês";
+    let despesasLabel = "Despesas do Mês";
+    let balancoLabel = "Balanço do Mês";
+
+    if (isFiltered) {
+      const labelMap = {
+        today: "Hoje",
+        "7days": "7 Dias",
+        "30days": "30 Dias"
+      };
+      const periodLabel = labelMap[dateFilter as "today" | "7days" | "30days"] || "Período";
+      receitasLabel = `Receitas (${periodLabel})`;
+      despesasLabel = `Despesas (${periodLabel})`;
+      balancoLabel = `Balanço (${periodLabel})`;
+    }
+
     return {
       saldoAtual,
       receitasDoMes,
       despesasDoMes,
-      balancoDoMes
+      balancoDoMes,
+      receitasLabel,
+      despesasLabel,
+      balancoLabel
     };
-  }, [transactions]);
+  }, [transactions, filteredTransactions, dateFilter]);
 
   const chartData = useMemo(() => {
     return [
@@ -401,6 +450,7 @@ export default function Home() {
           theme={theme}
           onAddClick={() => router.push("/lancamento")}
           showToast={showToast}
+          onDateFilterChange={(filter) => setDateFilter(filter)}
         />
 
         <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
@@ -416,7 +466,7 @@ export default function Home() {
           />
 
           <TransactionTable
-            transactions={transactions}
+            transactions={filteredTransactions}
             theme={theme}
             onEditClick={handleOpenEditModal}
             onDeleteClick={handleDeleteTransaction}

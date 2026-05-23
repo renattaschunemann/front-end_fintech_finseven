@@ -24,6 +24,7 @@ export interface HeaderProps {
   theme: "dark" | "light";
   onAddClick?: () => void;
   showToast: (msg: string, type: "success" | "info" | "error") => void;
+  onDateFilterChange?: (filter: "today" | "7days" | "30days" | "all") => void;
 }
 
 export interface StatsCardsProps {
@@ -32,6 +33,9 @@ export interface StatsCardsProps {
     receitasDoMes: number;
     despesasDoMes: number;
     balancoDoMes: number;
+    receitasLabel?: string;
+    despesasLabel?: string;
+    balancoLabel?: string;
   };
   formatCurrency: (val: number) => string;
 }
