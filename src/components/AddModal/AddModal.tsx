@@ -55,7 +55,7 @@ export default function AddModal({
                 type="button"
                 onClick={() => {
                   setFormType("Receitas");
-                  setFormCategory("Receitas");
+                  setFormCategory("Salário");
                 }}
                 className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                   formType === "Receitas"
@@ -72,7 +72,7 @@ export default function AddModal({
                 type="button"
                 onClick={() => {
                   setFormType("Despesas");
-                  setFormCategory("Despesas");
+                  setFormCategory("Supermercado");
                 }}
                 className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                   formType === "Despesas"
@@ -176,14 +176,11 @@ export default function AddModal({
               >
                 {formType === "Receitas" ? (
                   <>
-                    <option value="Receitas">Receitas</option>
                     <option value="Salário">Salário</option>
-                    <option value="Investimentos">Investimentos</option>
                     <option value="Freelance">Freelance</option>
                   </>
                 ) : (
                   <>
-                    <option value="Despesas">Despesas</option>
                     <option value="Cartão de Crédito">Cartão de Crédito</option>
                     <option value="Supermercado">Supermercado</option>
                     <option value="Aluguel">Aluguel</option>

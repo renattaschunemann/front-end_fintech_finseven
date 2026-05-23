@@ -18,7 +18,7 @@ function LancamentoContent() {
   const [activeMenu, setActiveMenu] = useState("Lançamento");
 
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
-  const [formCategory, setFormCategory] = useState("Despesas");
+  const [formCategory, setFormCategory] = useState("Supermercado");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
@@ -72,12 +72,12 @@ function LancamentoContent() {
   useEffect(() => {
     if (typeParam === "Receitas" || typeParam === "Despesas" || typeParam === "Investimentos") {
       setFormType(typeParam);
-      setFormCategory(typeParam);
+      setFormCategory(typeParam === "Receitas" ? "Salário" : typeParam === "Investimentos" ? "Ações" : "Supermercado");
     }
   }, [typeParam]);
 
   useEffect(() => {
-    setFormCategory(formType);
+    setFormCategory(formType === "Receitas" ? "Salário" : formType === "Investimentos" ? "Ações" : "Supermercado");
   }, [formType]);
 
   useEffect(() => {
@@ -95,11 +95,11 @@ function LancamentoContent() {
 
   const getCategories = () => {
     if (formType === "Receitas") {
-      return ["Receitas", "Salário", "Freelance", "Rendimentos", "Outros"];
+      return ["Salário", "Freelance", "Rendimentos", "Outros"];
     } else if (formType === "Investimentos") {
-      return ["Investimentos", "Ações", "FIIs", "Renda Fixa", "Criptomoedas", "Outros"];
+      return ["Ações", "FIIs", "Renda Fixa", "Cripto", "Outros"];
     } else {
-      return ["Despesas", "Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
+      return ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
     }
   };
 

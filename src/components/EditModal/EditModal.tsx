@@ -152,7 +152,6 @@ export default function EditModal({
               >
                 {formType === "Receitas" ? (
                   <>
-                    <option value="Receitas">Receitas</option>
                     <option value="Salário">Salário</option>
                     <option value="Freelance">Freelance</option>
                     <option value="Rendimentos">Rendimentos</option>
@@ -160,7 +159,6 @@ export default function EditModal({
                   </>
                 ) : formType === "Investimentos" ? (
                   <>
-                    <option value="Investimentos">Investimentos</option>
                     <option value="Ações">Ações</option>
                     <option value="FIIs">FIIs</option>
                     <option value="Renda Fixa">Renda Fixa</option>
@@ -169,7 +167,6 @@ export default function EditModal({
                   </>
                 ) : (
                   <>
-                    <option value="Despesas">Despesas</option>
                     <option value="Cartão de Crédito">Cartão de Crédito</option>
                     <option value="Supermercado">Supermercado</option>
                     <option value="Aluguel">Aluguel</option>

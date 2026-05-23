@@ -162,7 +162,7 @@ export default function Home() {
   const [activeMenu, setActiveMenu] = useState("Home");
   const [dateFilter, setDateFilter] = useState<"today" | "7days" | "30days" | "all">("all");
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
-  const [formCategory, setFormCategory] = useState("Despesas");
+  const [formCategory, setFormCategory] = useState("Supermercado");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");

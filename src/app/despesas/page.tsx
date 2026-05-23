@@ -152,7 +152,7 @@ function DespesasContent() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
-  const [formCategory, setFormCategory] = useState("Despesas");
+  const [formCategory, setFormCategory] = useState("Supermercado");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");

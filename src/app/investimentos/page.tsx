@@ -152,7 +152,7 @@ function InvestimentosContent() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Investimentos");
-  const [formCategory, setFormCategory] = useState("Investimentos");
+  const [formCategory, setFormCategory] = useState("Ações");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
