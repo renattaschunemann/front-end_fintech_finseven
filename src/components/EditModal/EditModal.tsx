@@ -22,6 +22,22 @@ export default function EditModal({
   setFormCategory,
   theme,
 }: EditModalProps) {
+  const [investSubgroup, setInvestSubgroup] = React.useState<"Renda Fixa" | "Renda Variável" | "Criptomoedas">(() => {
+    if (["Ações", "FIIs", "ETFs", "BDRs"].includes(formCategory)) return "Renda Variável";
+    if (["Bitcoin", "Ethereum", "Solana", "Stablecoins"].includes(formCategory)) return "Criptomoedas";
+    return "Renda Fixa";
+  });
+
+  React.useEffect(() => {
+    if (["Ações", "FIIs", "ETFs", "BDRs"].includes(formCategory)) {
+      setInvestSubgroup("Renda Variável");
+    } else if (["Bitcoin", "Ethereum", "Solana", "Stablecoins"].includes(formCategory)) {
+      setInvestSubgroup("Criptomoedas");
+    } else {
+      setInvestSubgroup("Renda Fixa");
+    }
+  }, [formCategory]);
+
   if (!isOpen) return null;
 
   return (
@@ -119,6 +135,31 @@ export default function EditModal({
             </div>
           </div>
 
+          {formType === "Investimentos" && (
+            <div>
+              <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
+                theme === "dark" ? "text-slate-400" : "text-slate-500"
+              }`}>Tipo de Investimento</label>
+              <select
+                value={investSubgroup}
+                onChange={(e) => {
+                  const sub = e.target.value as any;
+                  setInvestSubgroup(sub);
+                  if (sub === "Renda Fixa") setFormCategory("Tesouro Direto");
+                  else if (sub === "Renda Variável") setFormCategory("Ações");
+                  else if (sub === "Criptomoedas") setFormCategory("Bitcoin");
+                }}
+                className={`w-full border rounded-xl px-3 py-2.5 text-xs focus:outline-none transition-colors focus:border-blue-500 ${
+                  theme === "dark" ? "bg-[#070b13] border-slate-800/80 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
+                }`}
+              >
+                <option value="Renda Fixa">Renda Fixa</option>
+                <option value="Renda Variável">Renda Variável</option>
+                <option value="Criptomoedas">Criptomoedas</option>
+              </select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
@@ -159,11 +200,34 @@ export default function EditModal({
                   </>
                 ) : formType === "Investimentos" ? (
                   <>
-                    <option value="Ações">Ações</option>
-                    <option value="FIIs">FIIs</option>
-                    <option value="Renda Fixa">Renda Fixa</option>
-                    <option value="Cripto">Cripto</option>
-                    <option value="Outros">Outros</option>
+                    {investSubgroup === "Renda Fixa" && (
+                      <>
+                        <option value="Tesouro Direto">Tesouro Direto</option>
+                        <option value="CDB">CDB</option>
+                        <option value="LCI/LCA">LCI/LCA</option>
+                        <option value="Poupança">Poupança</option>
+                        <option value="Debêntures">Debêntures</option>
+                        <option value="Outros">Outros</option>
+                      </>
+                    )}
+                    {investSubgroup === "Renda Variável" && (
+                      <>
+                        <option value="Ações">Ações</option>
+                        <option value="FIIs">FIIs</option>
+                        <option value="ETFs">ETFs</option>
+                        <option value="BDRs">BDRs</option>
+                        <option value="Outros">Outros</option>
+                      </>
+                    )}
+                    {investSubgroup === "Criptomoedas" && (
+                      <>
+                        <option value="Bitcoin">Bitcoin</option>
+                        <option value="Ethereum">Ethereum</option>
+                        <option value="Solana">Solana</option>
+                        <option value="Stablecoins">Stablecoins</option>
+                        <option value="Outros">Outros</option>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>

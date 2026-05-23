@@ -23,6 +23,23 @@ function LancamentoContent() {
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
   const [formDate, setFormDate] = useState("2026-05-23");
+
+  const [investSubgroup, setInvestSubgroup] = useState<"Renda Fixa" | "Renda Variável" | "Criptomoedas">(() => {
+    if (["Ações", "FIIs", "ETFs", "BDRs"].includes(formCategory)) return "Renda Variável";
+    if (["Bitcoin", "Ethereum", "Solana", "Stablecoins"].includes(formCategory)) return "Criptomoedas";
+    return "Renda Fixa";
+  });
+
+  useEffect(() => {
+    if (["Ações", "FIIs", "ETFs", "BDRs"].includes(formCategory)) {
+      setInvestSubgroup("Renda Variável");
+    } else if (["Bitcoin", "Ethereum", "Solana", "Stablecoins"].includes(formCategory)) {
+      setInvestSubgroup("Criptomoedas");
+    } else {
+      setInvestSubgroup("Renda Fixa");
+    }
+  }, [formCategory]);
+
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
   useEffect(() => {
@@ -97,7 +114,13 @@ function LancamentoContent() {
     if (formType === "Receitas") {
       return ["Salário", "Freelance", "Rendimentos", "Outros"];
     } else if (formType === "Investimentos") {
-      return ["Ações", "FIIs", "Renda Fixa", "Cripto", "Outros"];
+      if (investSubgroup === "Renda Fixa") {
+        return ["Tesouro Direto", "CDB", "LCI/LCA", "Poupança", "Debêntures", "Outros"];
+      } else if (investSubgroup === "Renda Variável") {
+        return ["Ações", "FIIs", "ETFs", "BDRs", "Outros"];
+      } else {
+        return ["Bitcoin", "Ethereum", "Solana", "Stablecoins", "Outros"];
+      }
     } else {
       return ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
     }
@@ -297,6 +320,33 @@ function LancamentoContent() {
                   </button>
                 </div>
               </div>
+
+              {formType === "Investimentos" && (
+                <div className="mb-4 animateFadeIn">
+                  <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
+                    theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  }`}>Tipo de Investimento</label>
+                  <select
+                    value={investSubgroup}
+                    onChange={(e) => {
+                      const sub = e.target.value as any;
+                      setInvestSubgroup(sub);
+                      if (sub === "Renda Fixa") setFormCategory("Tesouro Direto");
+                      else if (sub === "Renda Variável") setFormCategory("Ações");
+                      else if (sub === "Criptomoedas") setFormCategory("Bitcoin");
+                    }}
+                    className={`w-full border rounded-xl px-3.5 py-3 text-xs font-medium focus:outline-none transition-colors focus:ring-1 focus:ring-blue-500 ${
+                      theme === "dark" 
+                        ? "bg-[#070b13] border-slate-800/80 text-slate-200" 
+                        : "bg-slate-50 border-slate-200 text-slate-800"
+                    }`}
+                  >
+                    <option value="Renda Fixa">Renda Fixa</option>
+                    <option value="Renda Variável">Renda Variável</option>
+                    <option value="Criptomoedas">Criptomoedas</option>
+                  </select>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
