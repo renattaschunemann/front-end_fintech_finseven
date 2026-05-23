@@ -112,7 +112,7 @@ function LancamentoContent() {
 
   const getCategories = () => {
     if (formType === "Receitas") {
-      return ["Salário", "Freelance", "Rendimentos", "Outros"];
+      return ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Rendimentos", "Outros"];
     } else if (formType === "Investimentos") {
       if (investSubgroup === "Renda Fixa") {
         return ["Tesouro Direto", "CDB", "LCI/LCA", "Poupança", "Debêntures", "Outros"];
@@ -122,7 +122,7 @@ function LancamentoContent() {
         return ["Bitcoin", "Ethereum", "Solana", "Stablecoins", "Outros"];
       }
     } else {
-      return ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
+      return ["Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", "Lazer", "Água", "Luz", "Internet", "Aluguel", "Cartão de Crédito", "Outros"];
     }
   };
 

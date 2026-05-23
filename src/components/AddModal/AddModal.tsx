@@ -226,7 +226,12 @@ export default function AddModal({
                 {formType === "Receitas" ? (
                   <>
                     <option value="Salário">Salário</option>
-                    <option value="Freelance">Freelance</option>
+                    <option value="Comissão">Comissão</option>
+                    <option value="Hora Extra">Hora Extra</option>
+                    <option value="Bônus">Bônus</option>
+                    <option value="Freelancer">Freelancer</option>
+                    <option value="Rendimentos">Rendimentos</option>
+                    <option value="Outros">Outros</option>
                   </>
                 ) : formType === "Investimentos" ? (
                   <>
@@ -261,10 +266,18 @@ export default function AddModal({
                   </>
                 ) : (
                   <>
-                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Saúde">Saúde</option>
+                    <option value="Escola">Escola</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Alimentação">Alimentação</option>
                     <option value="Supermercado">Supermercado</option>
-                    <option value="Aluguel">Aluguel</option>
                     <option value="Lazer">Lazer</option>
+                    <option value="Água">Água</option>
+                    <option value="Luz">Luz</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Aluguel">Aluguel</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Outros">Outros</option>
                   </>
                 )}
               </select>
