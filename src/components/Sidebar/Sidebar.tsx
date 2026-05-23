@@ -151,31 +151,6 @@ export default function Sidebar({
         </div>
 
         <div className="p-4 border-t border-slate-800/40 space-y-1">
-          {loggedUser && (
-            <div 
-              onClick={() => {
-                showToast("Abrindo perfil do usuário...", "info");
-                router.push("/perfil");
-              }}
-              className={`flex items-center gap-3 p-3 rounded-xl mb-3 cursor-pointer transition-all border ${
-                theme === "dark" 
-                  ? "bg-[#0b0f19]/40 border-slate-800/40 hover:bg-[#101422]/60 hover:border-slate-700/60" 
-                  : "bg-slate-50 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300"
-              }`}
-            >
-              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-bold flex items-center justify-center text-sm shadow-md shadow-blue-500/10 shrink-0">
-                {loggedUser.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className={`text-xs font-bold truncate ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
-                  {loggedUser.name}
-                </p>
-                <p className="text-[10px] text-slate-500 truncate font-semibold">
-                  {loggedUser.email}
-                </p>
-              </div>
-            </div>
-          )}
 
           <button 
             onClick={() => showToast("Abrindo configurações...", "info")} 

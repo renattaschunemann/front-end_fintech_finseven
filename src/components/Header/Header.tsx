@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { HeaderProps, Transaction } from "@/interfaces";
+import { useRouter } from "next/navigation";
 
 export default function Header({
   setSidebarOpen,
@@ -10,12 +11,28 @@ export default function Header({
   showToast,
   onDateFilterChange,
 }: HeaderProps) {
+  const router = useRouter();
   const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<"today" | "7days" | "30days" | "all">("today");
+  const [loggedUser, setLoggedUser] = useState<{ name: string; cpf: string; email: string } | null>(null);
 
   const shareRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Sync logged in user session on mount
+  useEffect(() => {
+    const userJson = localStorage.getItem("finseven-logged-user");
+    if (userJson) {
+      try {
+        setLoggedUser(JSON.parse(userJson));
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -25,6 +42,9 @@ export default function Header({
       }
       if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
         setDateDropdownOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -165,11 +185,8 @@ export default function Header({
         {onAddClick && (
           <button 
             onClick={onAddClick}
-            className="bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.02] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-sm font-extrabold px-6 py-3 rounded-2xl hover:scale-[1.04] transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.65)] border border-emerald-400/30 text-white cursor-pointer flex items-center justify-center"
           >
-            <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
             <span>+ Lançamento</span>
           </button>
         )}
@@ -303,6 +320,83 @@ export default function Header({
             </div>
           )}
         </div>
+
+        {/* User Profile Avatar */}
+        {loggedUser && (
+          <div className="relative" ref={profileMenuRef}>
+            <button 
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-extrabold flex items-center justify-center text-xs shadow-md shadow-blue-500/15 hover:scale-105 transition-transform cursor-pointer shrink-0 border border-blue-400/25 select-none"
+            >
+              {loggedUser.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+            </button>
+
+            {profileMenuOpen && (
+              <div className={`absolute right-0 mt-2 w-56 rounded-2xl border p-2 shadow-xl backdrop-blur-xl z-30 animate-fade-in ${
+                theme === "dark" 
+                  ? "bg-[#101422]/95 border-slate-800/50 shadow-black/60 text-slate-200" 
+                  : "bg-white/95 border-slate-200 shadow-slate-200/55 text-slate-700"
+              }`}>
+                {/* User info header */}
+                <div className="px-3 py-2.5 border-b border-slate-800/20 mb-1.5">
+                  <p className={`text-xs font-bold truncate ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
+                    {loggedUser.name}
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate font-semibold">
+                    {loggedUser.email}
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    window.location.href = "/perfil";
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                    theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Meu Perfil
+                </button>
+
+                <button 
+                  onClick={() => {
+                    showToast("Abrindo configurações...", "info");
+                    setProfileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                    theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  </svg>
+                  Configurações
+                </button>
+
+                <div className={`border-t my-1.5 ${theme === "dark" ? "border-slate-800" : "border-slate-100"}`}></div>
+
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem("finseven-logged-user");
+                    showToast("Sessão encerrada com sucesso!", "success");
+                    setProfileMenuOpen(false);
+                    window.location.href = "/login";
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 text-rose-400 hover:bg-rose-950/20 hover:text-rose-300 transition-colors cursor-pointer"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sair
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

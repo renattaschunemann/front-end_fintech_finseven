@@ -340,9 +340,6 @@ function PerfilContent() {
                   <h3 className={`text-md font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
                     Sua Foto de Perfil
                   </h3>
-                  <p className={`text-xs mt-0.5 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                    Iniciais geradas automaticamente baseadas no seu nome de cadastro.
-                  </p>
                 </div>
               </div>
 
