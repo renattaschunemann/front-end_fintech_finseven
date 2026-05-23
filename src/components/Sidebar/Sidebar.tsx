@@ -24,7 +24,6 @@ export default function Sidebar({
       try {
         setLoggedUser(JSON.parse(userJson));
       } catch (e) {
-        // ignore
       }
     }
   }, []);
@@ -200,9 +199,6 @@ export default function Sidebar({
   );
 }
 
-/* ==========================================================================
-   ReportModal - Subcomponent to render dynamic saved reports elegantly
-   ========================================================================== */
 interface ReportModalProps {
   reportType: "Mês atual" | "Último trimestre" | "Investimento anual" | "Balanço Mensal";
   onClose: () => void;
@@ -232,11 +228,10 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
   };
 
-  // Computations for Mês atual (May 2026 based on our dataset)
   const currentMonthData = React.useMemo(() => {
     const now = new Date();
     const padMonth = String(now.getMonth() + 1).padStart(2, "0");
-    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`; // "2026-05"
+    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`;
 
     const monthlyTxs = txs.filter(t => t.date.startsWith(currentMonthPrefix));
     let receitas = 0;
@@ -271,7 +266,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
     };
   }, [txs]);
 
-  // Computations for Último trimestre (Feb, Mar, Apr 2026)
   const quarterData = React.useMemo(() => {
     const months = [
       { name: "Fevereiro", prefix: "2026-02" },
@@ -312,7 +306,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
     };
   }, [txs]);
 
-  // Computations for Investimento anual (Year 2026)
   const annualInvestments = React.useMemo(() => {
     const annualTxs = txs.filter(t => t.date.startsWith("2026") && t.type === "Investimentos");
     let total = 0;
@@ -330,12 +323,11 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
       if (fixaCategories.includes(t.category)) fixa += val;
       else if (variavelCategories.includes(t.category)) variavel += val;
       else if (criptoCategories.includes(t.category)) cripto += val;
-      else fixa += val; // Fallback
+      else fixa += val;
     });
 
-    // 5 Years simulated projections at 10.5% average annual yield
     const projection = [];
-    let currentCapital = total > 0 ? total : 25000; // fallback if no investments logged
+    let currentCapital = total > 0 ? total : 25000;
     for (let yr = 1; yr <= 5; yr++) {
       currentCapital = currentCapital * 1.105;
       projection.push({ year: yr, val: currentCapital });
@@ -353,11 +345,10 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
     };
   }, [txs]);
 
-  // Computations for Balanço Mensal (Itaú vs Banco do Brasil)
   const bankBalanceData = React.useMemo(() => {
     const now = new Date();
     const padMonth = String(now.getMonth() + 1).padStart(2, "0");
-    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`; // "2026-05"
+    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`;
 
     const activeTxs = txs.filter(t => t.date.startsWith(currentMonthPrefix));
 
@@ -403,14 +394,11 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div onClick={onClose} className="fixed inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-300" />
 
-      {/* Modal Container */}
       <div className={`border rounded-3xl w-full max-w-lg shadow-2xl relative z-10 p-6 overflow-hidden transition-all animateFadeIn ${
         theme === "dark" ? "bg-[#0b0f19] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
       }`}>
-        {/* Glow Effects (Dark Theme) */}
         {theme === "dark" && (
           <>
             <div className="absolute -top-24 -left-24 h-48 w-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -418,7 +406,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
           </>
         )}
 
-        {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800/50 mb-5">
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -433,10 +420,8 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
           </button>
         </div>
 
-        {/* Content Body */}
         <div className="space-y-5 text-xs">
 
-          {/* ================= REPORT: Mês Atual ================= */}
           {reportType === "Mês atual" && (
             <div className="space-y-4 animateFadeIn">
               <p className="text-slate-400 font-medium leading-relaxed">
@@ -489,7 +474,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
             </div>
           )}
 
-          {/* ================= REPORT: Último Trimestre ================= */}
           {reportType === "Último trimestre" && (
             <div className="space-y-4 animateFadeIn">
               <p className="text-slate-400 font-medium leading-relaxed">
@@ -537,7 +521,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
             </div>
           )}
 
-          {/* ================= REPORT: Investimento Anual ================= */}
           {reportType === "Investimento anual" && (
             <div className="space-y-4 animateFadeIn">
               <p className="text-slate-400 font-medium leading-relaxed">
@@ -604,7 +587,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
             </div>
           )}
 
-          {/* ================= REPORT: Balanço Mensal ================= */}
           {reportType === "Balanço Mensal" && (
             <div className="space-y-4 animateFadeIn">
               <p className="text-slate-400 font-medium leading-relaxed">
@@ -612,7 +594,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
               </p>
 
               <div className="space-y-3 pt-1">
-                {/* Account 1: Itaú */}
                 <div className={`p-3.5 rounded-2xl border ${theme === "dark" ? "bg-[#101524]/60 border-slate-800/40" : "bg-slate-50 border-slate-100"} space-y-2`}>
                   <div className="flex items-center justify-between">
                     <strong className="text-blue-400 font-black text-xs">ITAÚ UNIBANCO (Conta Corrente)</strong>
@@ -634,7 +615,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
                   </div>
                 </div>
 
-                {/* Account 2: Banco do Brasil */}
                 <div className={`p-3.5 rounded-2xl border ${theme === "dark" ? "bg-[#101524]/60 border-slate-800/40" : "bg-slate-50 border-slate-100"} space-y-2`}>
                   <div className="flex items-center justify-between">
                     <strong className="text-violet-400 font-black text-xs">BANCO DO BRASIL (Conta Salário)</strong>
@@ -672,7 +652,6 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
 
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-800/50 mt-6">
           <button
             type="button"

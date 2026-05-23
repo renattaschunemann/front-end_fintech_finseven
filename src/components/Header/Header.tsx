@@ -22,19 +22,16 @@ export default function Header({
   const dateRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Sync logged in user session on mount
   useEffect(() => {
     const userJson = localStorage.getItem("finseven-logged-user");
     if (userJson) {
       try {
         setLoggedUser(JSON.parse(userJson));
       } catch (e) {
-        // ignore
       }
     }
   }, []);
 
-  // Close dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (shareRef.current && !shareRef.current.contains(event.target as Node)) {
@@ -101,7 +98,6 @@ export default function Header({
         return;
       }
 
-      // Build CSV content
       const headers = ["ID", "Data", "Categoria", "Descrição", "Conta Bancária", "Valor (R$)", "Tipo"];
       const rows = txs.map(t => [
         t.id,
@@ -113,7 +109,6 @@ export default function Header({
         t.type
       ]);
 
-      // Add UTF-8 BOM so Excel opens special accents correctly
       const csvContent = "\uFEFF" + [
         headers.join(";"),
         ...rows.map(r => r.join(";"))
@@ -191,7 +186,6 @@ export default function Header({
           </button>
         )}
 
-        {/* Share Button & Dropdown */}
         <div className="relative" ref={shareRef}>
           <button 
             onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
@@ -250,7 +244,6 @@ export default function Header({
           )}
         </div>
 
-        {/* Export Button */}
         <button 
           onClick={handleExportCSV}
           className={`border text-xs font-semibold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -265,7 +258,6 @@ export default function Header({
           <span className="hidden md:inline">Exportar</span>
         </button>
 
-        {/* Date Filter (Hoje) Dropdown */}
         <div className="relative" ref={dateRef}>
           <button 
             onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
@@ -321,7 +313,6 @@ export default function Header({
           )}
         </div>
 
-        {/* User Profile Avatar */}
         {loggedUser && (
           <div className="relative" ref={profileMenuRef}>
             <button 
@@ -337,7 +328,6 @@ export default function Header({
                   ? "bg-[#101422]/95 border-slate-800/50 shadow-black/60 text-slate-200" 
                   : "bg-white/95 border-slate-200 shadow-slate-200/55 text-slate-700"
               }`}>
-                {/* User info header */}
                 <div className="px-3 py-2.5 border-b border-slate-800/20 mb-1.5">
                   <p className={`text-xs font-bold truncate ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
                     {loggedUser.name}
