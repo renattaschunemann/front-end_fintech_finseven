@@ -56,6 +56,17 @@ function ReceitasContent() {
       for (let month = minM; month <= maxM; month++) {
         const padMonth = String(month + 1).padStart(2, "0");
 
+        // Base monthly revenue varies smoothly between 11000 and 13800 BRL to keep the average perfectly between 10000 and 15000
+        let monthlyBase = 11000 + (month * 200) + ((year - startYear) * 150);
+        if (year === 2026 && month === 4) {
+          // Set May 2026 to exactly 85% of the average of previous months (11950 BRL), since the user still has 7 days left in the month to record transactions
+          monthlyBase = Math.round(11950 * 0.85); // 10158 BRL
+        }
+
+        const dist = [0.28, 0.34, 0.38];
+        const recValues = dist.map(pct => Math.round(monthlyBase * pct));
+        const despValues = recValues.map(v => Math.round(v * 0.85));
+
         for (let i = 0; i < 3; i++) {
           const dayReceita = String(5 + i * 7).padStart(2, "0");
           const dateStr = `${year}-${padMonth}-${dayReceita}`;
@@ -64,7 +75,7 @@ function ReceitasContent() {
           const cat = categoriesReceitas[catIdx];
           const descList = descReceitas[catIdx];
           const desc = descList[i % descList.length];
-          const value = 2000 + ((year - startYear) * 300) + (month * 50) + (i * 250);
+          const value = recValues[i];
 
           list.push({
             id: `tx-gen-${idCounter++}`,
@@ -85,7 +96,7 @@ function ReceitasContent() {
           const cat = categoriesDespesas[catIdx];
           const descList = descDespesas[catIdx];
           const desc = descList[i % descList.length];
-          const value = 150 + (month * 15) + (i * 120);
+          const value = despValues[i];
 
           list.push({
             id: `tx-gen-${idCounter++}`,
@@ -106,7 +117,10 @@ function ReceitasContent() {
           const cat = categoriesInvestimentos[catIdx];
           const descList = descInvestimentos[catIdx];
           const desc = descList[i % descList.length];
-          const value = 200 + (month * 20) + (i * 150);
+          let value = 200 + (month * 20) + (i * 150);
+          if (year === 2026 && month === 4) {
+            value = Math.round(value * 1.8);
+          }
 
           list.push({
             id: `tx-gen-${idCounter++}`,
@@ -142,7 +156,7 @@ function ReceitasContent() {
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
-  const [formDate, setFormDate] = useState("2025-12-10");
+  const [formDate, setFormDate] = useState("2026-05-23");
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 

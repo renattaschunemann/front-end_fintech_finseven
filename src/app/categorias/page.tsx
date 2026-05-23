@@ -45,7 +45,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `${cat} Quinzenal A`,
           account: accounts[(index * 2) % accounts.length],
-          value: 1200 + (month * 10) + (index * 150),
+          value: year === 2026 && month === 4 ? Math.round((1200 + (month * 10) + (index * 150)) * 1.8) : 1200 + (month * 10) + (index * 150),
           type: "Receitas"
         });
         // Record 2
@@ -55,7 +55,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `${cat} Quinzenal B`,
           account: accounts[(index * 2 + 1) % accounts.length],
-          value: 1500 + (month * 15) + (index * 200),
+          value: year === 2026 && month === 4 ? Math.round((1500 + (month * 15) + (index * 200)) * 1.8) : 1500 + (month * 15) + (index * 200),
           type: "Receitas"
         });
       });
@@ -69,7 +69,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `Pagamento ${cat} A`,
           account: accounts[(index * 3) % accounts.length],
-          value: -(100 + (month * 5) + (index * 45)),
+          value: year === 2026 && month === 4 ? -Math.round((100 + (month * 5) + (index * 45)) * 1.8) : -(100 + (month * 5) + (index * 45)),
           type: "Despesas"
         });
         // Record 2
@@ -79,7 +79,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `Consumo ${cat} B`,
           account: accounts[(index * 3 + 1) % accounts.length],
-          value: -(120 + (month * 7) + (index * 60)),
+          value: year === 2026 && month === 4 ? -Math.round((120 + (month * 7) + (index * 60)) * 1.8) : -(120 + (month * 7) + (index * 60)),
           type: "Despesas"
         });
       });
@@ -93,7 +93,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `Aporte ${cat} Inicial`,
           account: accounts[(index * 4) % accounts.length],
-          value: 300 + (month * 20) + (index * 100),
+          value: year === 2026 && month === 4 ? Math.round((300 + (month * 20) + (index * 100)) * 1.8) : 300 + (month * 20) + (index * 100),
           type: "Investimentos"
         });
         // Record 2
@@ -103,7 +103,7 @@ const generateMockTransactions = (): Transaction[] => {
           category: cat,
           description: `Aporte ${cat} Complementar`,
           account: accounts[(index * 4 + 1) % accounts.length],
-          value: 450 + (month * 25) + (index * 150),
+          value: year === 2026 && month === 4 ? Math.round((450 + (month * 25) + (index * 150)) * 1.8) : 450 + (month * 25) + (index * 150),
           type: "Investimentos"
         });
       });

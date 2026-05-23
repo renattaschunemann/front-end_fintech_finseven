@@ -22,7 +22,7 @@ function LancamentoContent() {
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
-  const [formDate, setFormDate] = useState("2025-12-10");
+  const [formDate, setFormDate] = useState("2026-05-23");
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
   useEffect(() => {

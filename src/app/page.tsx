@@ -56,6 +56,17 @@ const generateMockTransactions = (): Transaction[] => {
     for (let month = minM; month <= maxM; month++) {
       const padMonth = String(month + 1).padStart(2, "0");
 
+      // Base monthly revenue varies smoothly between 11000 and 13800 BRL to keep the average perfectly between 10000 and 15000
+      let monthlyBase = 11000 + (month * 200) + ((year - startYear) * 150);
+      if (year === 2026 && month === 4) {
+        // Set May 2026 to exactly 85% of the average of previous months (11950 BRL), since the user still has 7 days left in the month to record transactions
+        monthlyBase = Math.round(11950 * 0.85); // 10158 BRL
+      }
+
+      const dist = [0.28, 0.34, 0.38];
+      const recValues = dist.map(pct => Math.round(monthlyBase * pct));
+      const despValues = recValues.map(v => Math.round(v * 0.85));
+
       for (let i = 0; i < 3; i++) {
         const dayReceita = String(5 + i * 7).padStart(2, "0");
         const dateStr = `${year}-${padMonth}-${dayReceita}`;
@@ -64,7 +75,7 @@ const generateMockTransactions = (): Transaction[] => {
         const cat = categoriesReceitas[catIdx];
         const descList = descReceitas[catIdx];
         const desc = descList[i % descList.length];
-        const value = 2000 + ((year - startYear) * 300) + (month * 50) + (i * 250);
+        const value = recValues[i];
 
         list.push({
           id: `tx-gen-${idCounter++}`,
@@ -85,7 +96,7 @@ const generateMockTransactions = (): Transaction[] => {
         const cat = categoriesDespesas[catIdx];
         const descList = descDespesas[catIdx];
         const desc = descList[i % descList.length];
-        const value = 150 + (month * 15) + (i * 120);
+        const value = despValues[i];
 
         list.push({
           id: `tx-gen-${idCounter++}`,
@@ -106,7 +117,10 @@ const generateMockTransactions = (): Transaction[] => {
         const cat = categoriesInvestimentos[catIdx];
         const descList = descInvestimentos[catIdx];
         const desc = descList[i % descList.length];
-        const value = 200 + (month * 20) + (i * 150);
+        let value = 200 + (month * 20) + (i * 150);
+        if (year === 2026 && month === 4) {
+          value = Math.round(value * 1.8);
+        }
 
         list.push({
           id: `tx-gen-${idCounter++}`,
@@ -146,13 +160,13 @@ export default function Home() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeMenu, setActiveMenu] = useState("Home");
-  const [dateFilter, setDateFilter] = useState<"today" | "7days" | "30days" | "all">("today");
+  const [dateFilter, setDateFilter] = useState<"today" | "7days" | "30days" | "all">("all");
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
   const [formCategory, setFormCategory] = useState("Despesas");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [formValue, setFormValue] = useState("");
-  const [formDate, setFormDate] = useState("2025-12-10");
+  const [formDate, setFormDate] = useState("2026-05-23");
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
   useEffect(() => {
@@ -164,20 +178,24 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("finseven-transactions");
-    if (saved) {
+    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v3");
+    if (saved && mockUpdated === "true") {
       try {
         const parsed = JSON.parse(saved);
         const hasInvestments = parsed.some((t: any) => t.type === "Investimentos");
         if (parsed.length < 10 || !hasInvestments) {
           setTransactions(INITIAL_TRANSACTIONS);
+          localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
         } else {
           setTransactions(parsed);
         }
       } catch (e) {
         setTransactions(INITIAL_TRANSACTIONS);
+        localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
       }
     } else {
       setTransactions(INITIAL_TRANSACTIONS);
+      localStorage.setItem("finseven-mock-updated-may2026-v3", "true");
     }
     setIsLoaded(true);
   }, []);
@@ -257,7 +275,11 @@ export default function Home() {
 
   const stats = useMemo(() => {
     const isFiltered = dateFilter !== "all";
-    const targetTxs = isFiltered ? filteredTransactions : transactions.filter(t => t.date.startsWith("2025-12"));
+    const now = new Date();
+    const padMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`;
+
+    const targetTxs = isFiltered ? filteredTransactions : transactions.filter(t => t.date.startsWith(currentMonthPrefix));
 
     let receitasDoMes = 0;
     let despesasDoMes = 0;
@@ -301,15 +323,49 @@ export default function Home() {
   }, [transactions, filteredTransactions, dateFilter]);
 
   const chartData = useMemo(() => {
-    return [
-      ...MONTHLY_HISTORICAL_DATA,
-      {
-        name: "Dezembro",
-        receitas: stats.receitasDoMes,
-        despesas: stats.despesasDoMes
-      }
+    const monthsData = [];
+    const shortMonthNames = [
+      "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+      "Jul", "Ago", "Set", "Out", "Nov", "Dez"
     ];
-  }, [stats]);
+
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      // Calculate target month and year
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthIdx = d.getMonth();
+      
+      // "Mês/Ano" format (e.g. "Dez/25", "Jan/26", "Mai/26")
+      const monthLabel = `${shortMonthNames[monthIdx]}/${String(year).slice(-2)}`;
+
+      // Filter transactions for this specific month/year prefix
+      const padMonth = String(monthIdx + 1).padStart(2, "0");
+      const prefix = `${year}-${padMonth}`;
+      
+      const monthTxs = transactions.filter(t => t.date.startsWith(prefix));
+
+      let receitas = 0;
+      let despesas = 0;
+      monthTxs.forEach(t => {
+        if (t.value > 0) {
+          receitas += t.value;
+        } else {
+          despesas += Math.abs(t.value);
+        }
+      });
+
+      // Decouple the chart month total from the table date filter to always show full month totals
+      monthsData.push({
+        name: monthLabel,
+        receitas: receitas,
+        despesas: despesas
+      });
+    }
+
+    return monthsData;
+  }, [transactions, stats]);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -332,7 +388,7 @@ export default function Home() {
     setFormDescription("");
     setFormAccount("Itaú");
     setFormValue("");
-    setFormDate("2025-12-11");
+    setFormDate("2026-05-23");
     setIsAddModalOpen(true);
   };
 

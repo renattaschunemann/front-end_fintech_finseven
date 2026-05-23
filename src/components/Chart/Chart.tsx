@@ -22,7 +22,16 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
   
   const graphHeight = chartHeight - paddingTop - paddingBottom;
   const graphWidth = chartWidth - paddingLeft - paddingRight;
-  const maxVal = 6000;
+
+  // Calculate dynamic maximum value to fit the chart beautifully under any volume of transactions
+  const rawMax = Math.max(...chartData.map(d => Math.max(d.receitas, d.despesas)), 6000);
+  let step = 1000;
+  if (rawMax > 12000) {
+    step = 3000;
+  } else if (rawMax > 6000) {
+    step = 2000;
+  }
+  const maxVal = Math.ceil(rawMax / step) * step;
 
   return (
     <div className={`backdrop-blur border rounded-2xl p-6 shadow-md relative transition-all ${
@@ -49,8 +58,8 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
       <div className="w-full overflow-x-auto relative min-h-[260px] flex items-center justify-center">
         <div className="min-w-[650px] w-full max-w-[750px] relative">
           <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto">
-            {Array.from({ length: 7 }).map((_, i) => {
-              const val = i * 1000;
+            {Array.from({ length: Math.round(maxVal / step) + 1 }).map((_, i) => {
+              const val = i * step;
               const y = chartHeight - paddingBottom - (val / maxVal) * graphHeight;
               
               return (
@@ -115,16 +124,6 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     rx="4"
                     fill={isHovered ? "#34d399" : "#059669"}
                     className="animateBarGrow cursor-pointer transition-all duration-200 hover:brightness-125"
-                    onMouseEnter={() => {
-                      setActiveTooltip({
-                        x: recX + barWidth / 2,
-                        y: recY - 10,
-                        month: d.name,
-                        receitas: d.receitas,
-                        despesas: d.despesas
-                      });
-                    }}
-                    onMouseLeave={() => setActiveTooltip(null)}
                   />
 
                   <rect
@@ -135,16 +134,6 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     rx="4"
                     fill={isHovered ? "#fb7185" : "#dc2626"}
                     className="animateBarGrow cursor-pointer transition-all duration-200 hover:brightness-125"
-                    onMouseEnter={() => {
-                      setActiveTooltip({
-                        x: despX + barWidth / 2,
-                        y: despY - 10,
-                        month: d.name,
-                        receitas: d.receitas,
-                        despesas: d.despesas
-                      });
-                    }}
-                    onMouseLeave={() => setActiveTooltip(null)}
                   />
 
                   <rect
@@ -152,12 +141,14 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     y={paddingTop}
                     width={monthWidth}
                     height={graphHeight}
-                    fill="transparent"
+                    fill="black"
+                    fillOpacity="0"
+                    pointerEvents="all"
                     className="cursor-pointer"
                     onMouseEnter={() => {
                       setActiveTooltip({
                         x: groupCenterX,
-                        y: Math.min(recY, despY) - 10,
+                        y: Math.max(120, Math.min(recY, despY) - 10),
                         month: d.name,
                         receitas: d.receitas,
                         despesas: d.despesas
@@ -169,9 +160,9 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   <text
                     x={groupCenterX}
                     y={chartHeight - paddingBottom + 18}
-                    fill={d.name === "Dezembro" ? (theme === "dark" ? "#67e8f9" : "#0891b2") : (theme === "dark" ? "#64748b" : "#475569")}
+                    fill={index === chartData.length - 1 ? (theme === "dark" ? "#67e8f9" : "#0891b2") : (theme === "dark" ? "#64748b" : "#475569")}
                     fontSize="10"
-                    fontWeight={d.name === "Dezembro" ? "bold" : "semibold"}
+                    fontWeight={index === chartData.length - 1 ? "bold" : "semibold"}
                     textAnchor="middle"
                     className="transition-colors"
                   >
@@ -180,46 +171,194 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                 </g>
               );
             })}
-          </svg>
+            {activeTooltip && (() => {
+              const tooltipWidth = 170;
+              const halfWidth = tooltipWidth / 2;
+              const minSafeX = halfWidth + 5; // 90
+              const maxSafeX = chartWidth - halfWidth - 5; // 610
 
-          {activeTooltip && (
-            <div 
-              className={`absolute border rounded-xl p-3.5 shadow-2xl z-30 transition-all duration-200 pointer-events-none w-56 text-[11px] font-semibold animateFadeIn ${
-                theme === "dark" ? "bg-slate-950/95 border-slate-800 text-slate-300" : "bg-white/95 border-slate-200 text-slate-700"
-              }`}
-              style={{
-                left: `${(activeTooltip.x / chartWidth) * 100}%`,
-                top: `${(activeTooltip.y / chartHeight) * 100 - 30}%`,
-                transform: "translate(-50%, -100%)"
-              }}
-            >
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-2">
-                <span className={`font-bold text-xs ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>{activeTooltip.month}</span>
-                {activeTooltip.month === "Dezembro" && (
-                  <span className="bg-cyan-950/80 text-cyan-400 border border-cyan-800/30 text-[8px] uppercase tracking-widest px-1.5 py-0.5 rounded">Ativo</span>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-emerald-500">
-                  <span className="opacity-80">Receitas:</span>
-                  <span className="font-extrabold">{formatCurrency(activeTooltip.receitas)}</span>
-                </div>
-                <div className="flex items-center justify-between text-rose-500">
-                  <span className="opacity-80">Despesas:</span>
-                  <span className="font-extrabold">{formatCurrency(activeTooltip.despesas)}</span>
-                </div>
-                <div className="flex items-center justify-between border-t border-slate-300/35 pt-1.5 text-slate-500">
-                  <span className="opacity-80">Balanço:</span>
-                  <span className={`font-extrabold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+              let tooltipX = activeTooltip.x;
+              let arrowX = 0;
+
+              if (tooltipX < minSafeX) {
+                tooltipX = minSafeX;
+                arrowX = activeTooltip.x - minSafeX;
+              } else if (tooltipX > maxSafeX) {
+                tooltipX = maxSafeX;
+                arrowX = activeTooltip.x - maxSafeX;
+              }
+
+              return (
+                <g 
+                  transform={`translate(${tooltipX}, ${activeTooltip.y})`}
+                  className="transition-all duration-200 pointer-events-none"
+                  pointerEvents="none"
+                >
+                  {/* Tooltip background card */}
+                  <rect
+                    x="-85"
+                    y="-115"
+                    width="170"
+                    height="100"
+                    rx="12"
+                    fill={theme === "dark" ? "#070b13" : "#ffffff"}
+                    stroke={theme === "dark" ? "#1e293b" : "#cbd5e1"}
+                    strokeWidth="1.5"
+                    opacity="0.96"
+                    pointerEvents="none"
+                  />
+                  
+                  {/* Tooltip little bottom arrow */}
+                  <path
+                    d={`M ${arrowX - 6} -15 L ${arrowX} -9 L ${arrowX + 6} -15 Z`}
+                    fill={theme === "dark" ? "#070b13" : "#ffffff"}
+                    stroke={theme === "dark" ? "#1e293b" : "#cbd5e1"}
+                    strokeWidth="1.5"
+                    pointerEvents="none"
+                  />
+                  
+                  {/* Tooltip little bottom arrow fill cover */}
+                  <path
+                    d={`M ${arrowX - 5} -16.5 L ${arrowX} -10 L ${arrowX + 5} -16.5 Z`}
+                    fill={theme === "dark" ? "#070b13" : "#ffffff"}
+                    pointerEvents="none"
+                  />
+                  
+                  {/* Header: Month name */}
+                  <text
+                    x="-73"
+                    y="-96"
+                    fill={theme === "dark" ? "#f1f5f9" : "#0f172a"}
+                    fontSize="11"
+                    fontWeight="bold"
+                    pointerEvents="none"
+                  >
+                    {activeTooltip.month}
+                  </text>
+                  
+                  {/* Active indicator badge if last month */}
+                  {activeTooltip.month === chartData[chartData.length - 1]?.name && (
+                    <g transform="translate(38, -106)" pointerEvents="none">
+                      <rect
+                        x="0"
+                        y="0"
+                        width="35"
+                        height="13"
+                        rx="3"
+                        fill={theme === "dark" ? "rgba(6,182,212,0.15)" : "rgba(8,145,178,0.08)"}
+                        stroke={theme === "dark" ? "rgba(6,182,212,0.3)" : "rgba(8,145,178,0.15)"}
+                        strokeWidth="1"
+                        pointerEvents="none"
+                      />
+                      <text
+                        x="17.5"
+                        y="9"
+                        fill="#06b6d4"
+                        fontSize="7.5"
+                        fontWeight="extrabold"
+                        textAnchor="middle"
+                        pointerEvents="none"
+                      >
+                        ATIVO
+                      </text>
+                    </g>
+                  )}
+
+                  {/* Divider line */}
+                  <line
+                    x1="-73"
+                    y1="-86"
+                    x2="73"
+                    y2="-86"
+                    stroke={theme === "dark" ? "#1e293b" : "#f1f5f9"}
+                    strokeWidth="1"
+                    pointerEvents="none"
+                  />
+
+                  {/* Revenues Row */}
+                  <text
+                    x="-73"
+                    y="-69"
+                    fill="#10b981"
+                    fontSize="9.5"
+                    fontWeight="semibold"
+                    pointerEvents="none"
+                  >
+                    Receitas:
+                  </text>
+                  <text
+                    x="73"
+                    y="-69"
+                    fill="#10b981"
+                    fontSize="10"
+                    fontWeight="extrabold"
+                    textAnchor="end"
+                    pointerEvents="none"
+                  >
+                    {formatCurrency(activeTooltip.receitas)}
+                  </text>
+
+                  {/* Expenses Row */}
+                  <text
+                    x="-73"
+                    y="-52"
+                    fill="#f43f5e"
+                    fontSize="9.5"
+                    fontWeight="semibold"
+                    pointerEvents="none"
+                  >
+                    Despesas:
+                  </text>
+                  <text
+                    x="73"
+                    y="-52"
+                    fill="#f43f5e"
+                    fontSize="10"
+                    fontWeight="extrabold"
+                    textAnchor="end"
+                    pointerEvents="none"
+                  >
+                    {formatCurrency(activeTooltip.despesas)}
+                  </text>
+
+                  {/* Small inner divider */}
+                  <line
+                    x1="-73"
+                    y1="-43"
+                    x2="73"
+                    y2="-43"
+                    stroke={theme === "dark" ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)"}
+                    strokeWidth="1"
+                    strokeDasharray="2 2"
+                    pointerEvents="none"
+                  />
+
+                  {/* Balance Row */}
+                  <text
+                    x="-73"
+                    y="-28"
+                    fill={theme === "dark" ? "#94a3b8" : "#475569"}
+                    fontSize="9.5"
+                    fontWeight="semibold"
+                    pointerEvents="none"
+                  >
+                    Balanço:
+                  </text>
+                  <text
+                    x="73"
+                    y="-28"
+                    fill={theme === "dark" ? "#ffffff" : "#0f172a"}
+                    fontSize="10.5"
+                    fontWeight="black"
+                    textAnchor="end"
+                    pointerEvents="none"
+                  >
                     {formatCurrency(activeTooltip.receitas - activeTooltip.despesas)}
-                  </span>
-                </div>
-              </div>
-              <div className={`w-2.5 h-2.5 border-r border-b absolute bottom-[-5px] left-1/2 -translate-x-1/2 rotate-45 ${
-                theme === "dark" ? "bg-slate-950 border-slate-800/80" : "bg-white border-slate-200"
-              }`} />
-            </div>
-          )}
+                  </text>
+                </g>
+              );
+            })()}
+          </svg>
         </div>
       </div>
     </div>
