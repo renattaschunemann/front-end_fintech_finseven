@@ -67,45 +67,34 @@ export default function ContaBancariaPage() {
 
   // Load registered bank accounts & theme
   useEffect(() => {
-    let savedAccounts = localStorage.getItem("finseven-bank-accounts");
-    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v4");
-    if (!savedAccounts || mockUpdated !== "true") {
-      const initialAccounts: BankAccount[] = [
-        {
-          id: "acc-itau",
-          bankName: "Itaú Unibanco",
-          bankCode: "341",
-          agency: "0123",
-          accountNumber: "98765-4",
-          initialBalance: 12500,
-          accountType: "Conta Corrente"
-        },
-        {
-          id: "acc-bb",
-          bankName: "Banco do Brasil S.A",
-          bankCode: "001",
-          agency: "4321",
-          accountNumber: "12345-6",
-          initialBalance: 8500,
-          accountType: "Conta Salário"
-        }
-      ];
-      localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
-      savedAccounts = JSON.stringify(initialAccounts);
-    }
-
-    if (savedAccounts) {
+    const loadAPI = async () => {
       try {
-        setBankAccounts(JSON.parse(savedAccounts));
-      } catch (e) {
+        const res = await fetch("http://localhost:8080/api/bancos");
+        if (!res.ok) throw new Error("Erro ao buscar bancos.");
+        const data = await res.json();
+        const mapped = data.map((item: any) => ({
+          id: String(item.idBanco),
+          bankName: item.nome,
+          bankCode: item.nome.includes("Brasil") ? "001" : item.nome.includes("Itaú") ? "341" : "341",
+          agency: item.agencia || "0000",
+          accountNumber: item.conta,
+          initialBalance: item.saldo,
+          accountType: item.tipo || "Conta Corrente"
+        }));
+        setBankAccounts(mapped);
+      } catch (error) {
+        showToast("Erro ao carregar contas bancárias do servidor.", "error");
         setBankAccounts([]);
       }
-    }
+      setIsLoaded(true);
+    };
+
+    loadAPI();
+
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
     if (savedTheme && (savedTheme === "dark" || savedTheme === "light")) {
       setTheme(savedTheme);
     }
-    setIsLoaded(true);
   }, []);
 
   // Sync theme
@@ -121,13 +110,6 @@ export default function ContaBancariaPage() {
       localStorage.setItem("finseven-theme", "dark");
     }
   }, [theme]);
-
-  // Persist accounts
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-bank-accounts", JSON.stringify(bankAccounts));
-    }
-  }, [bankAccounts, isLoaded]);
 
   // Auto-fill bank code when bank name changes
   useEffect(() => {
@@ -168,7 +150,7 @@ export default function ContaBancariaPage() {
     }).format(val);
   };
 
-  const handleRegisterAccount = (e: React.FormEvent) => {
+  const handleRegisterAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedBankName) {
@@ -202,32 +184,65 @@ export default function ContaBancariaPage() {
       return;
     }
 
-    const newAccount: BankAccount = {
-      id: "acc-" + Date.now(),
-      bankName: selectedBankName,
-      bankCode,
-      agency: agency.trim(),
-      accountNumber: accountNumber.trim(),
-      initialBalance: parsedBalance,
-      accountType,
-    };
+    try {
+      const payload = {
+        nome: selectedBankName,
+        agencia: agency.trim(),
+        conta: accountNumber.trim(),
+        tipo: accountType,
+        saldo: parsedBalance
+      };
 
-    setBankAccounts([newAccount, ...bankAccounts]);
-    showToast("Conta bancária cadastrada com sucesso!", "success");
+      const res = await fetch("http://localhost:8080/api/bancos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    // Reset Form
-    setSelectedBankName("");
-    setBankCode("");
-    setAgency("");
-    setAccountNumber("");
-    setInitialBalance("");
-    setAccountType("Conta Corrente");
+      if (!res.ok) throw new Error("Falha ao salvar conta bancária.");
+
+      const savedItem = await res.json();
+      const newAccount: BankAccount = {
+        id: String(savedItem.idBanco),
+        bankName: savedItem.nome,
+        bankCode: bankCode,
+        agency: savedItem.agencia || "0000",
+        accountNumber: savedItem.conta,
+        initialBalance: savedItem.saldo,
+        accountType: savedItem.tipo || "Conta Corrente"
+      };
+
+      setBankAccounts([newAccount, ...bankAccounts]);
+      showToast("Conta bancária cadastrada com sucesso!", "success");
+
+      // Reset Form
+      setSelectedBankName("");
+      setBankCode("");
+      setAgency("");
+      setAccountNumber("");
+      setInitialBalance("");
+      setAccountType("Conta Corrente");
+    } catch (error: any) {
+      showToast("Erro ao salvar conta bancária no servidor: " + error.message, "error");
+    }
   };
 
-  const handleDeleteAccount = (id: string) => {
+  const handleDeleteAccount = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta conta bancária?")) {
-      setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
-      showToast("Conta bancária excluída com sucesso!", "info");
+      try {
+        const res = await fetch(`http://localhost:8080/api/bancos/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!res.ok) throw new Error("Erro ao deletar.");
+
+        setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
+        showToast("Conta bancária excluída com sucesso!", "info");
+      } catch (error) {
+        showToast("Erro ao excluir conta bancária no servidor.", "error");
+      }
     }
   };
 

@@ -5,116 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { Transaction } from "@/interfaces";
-import { deleteTransaction } from "@/services/api";
-
-// Initial mock generator to sync with other views
-const generateMockTransactions = (): Transaction[] => {
-  const list: Transaction[] = [];
-  const startYear = 2024;
-  const startMonth = 0;
-  const endYear = 2026;
-  const endMonth = 4; // May 2026
-
-  let idCounter = 1;
-
-  const accounts = ["Itaú", "Banco do Brasil"];
-  
-  const categoriesReceitas = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer"];
-  const categoriesDespesas = [
-    "Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", 
-    "Lazer", "Água", "Luz", "Internet", "Aluguel"
-  ];
-  const categoriesInvestimentos = [
-    "Tesouro Direto", "CDB (Certificado de Depósito Bancário)", 
-    "LCI e LCA", "Poupança", "Debênture",
-    "Ações", "Fundos Imobiliários (FIIs)", "ETFs", "BDRs", "Criptomoedas"
-  ];
-
-  for (let year = startYear; year <= endYear; year++) {
-    const minM = year === startYear ? startMonth : 0;
-    const maxM = year === endYear ? endMonth : 11;
-
-    for (let month = minM; month <= maxM; month++) {
-      const padMonth = String(month + 1).padStart(2, "0");
-
-      // Generate 2 records for each Receitas category
-      categoriesReceitas.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-rec-${idCounter++}`,
-          date: `${year}-${padMonth}-05`,
-          category: cat,
-          description: `${cat} Quinzenal A`,
-          account: accounts[(index * 2) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((1200 + (month * 10) + (index * 150)) * 1.8) : 1200 + (month * 10) + (index * 150),
-          type: "Receitas"
-        });
-        // Record 2
-        list.push({
-          id: `tx-rec-${idCounter++}`,
-          date: `${year}-${padMonth}-20`,
-          category: cat,
-          description: `${cat} Quinzenal B`,
-          account: accounts[(index * 2 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((1500 + (month * 15) + (index * 200)) * 1.8) : 1500 + (month * 15) + (index * 200),
-          type: "Receitas"
-        });
-      });
-
-      // Generate 2 records for each Despesas category
-      categoriesDespesas.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-des-${idCounter++}`,
-          date: `${year}-${padMonth}-10`,
-          category: cat,
-          description: `Pagamento ${cat} A`,
-          account: accounts[(index * 3) % accounts.length],
-          value: year === 2026 && month === 4 ? -Math.round((100 + (month * 5) + (index * 45)) * 1.8) : -(100 + (month * 5) + (index * 45)),
-          type: "Despesas"
-        });
-        // Record 2
-        list.push({
-          id: `tx-des-${idCounter++}`,
-          date: `${year}-${padMonth}-25`,
-          category: cat,
-          description: `Consumo ${cat} B`,
-          account: accounts[(index * 3 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? -Math.round((120 + (month * 7) + (index * 60)) * 1.8) : -(120 + (month * 7) + (index * 60)),
-          type: "Despesas"
-        });
-      });
-
-      // Generate 2 records for each Investimentos category
-      categoriesInvestimentos.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-inv-${idCounter++}`,
-          date: `${year}-${padMonth}-15`,
-          category: cat,
-          description: `Aporte ${cat} Inicial`,
-          account: accounts[(index * 4) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((300 + (month * 20) + (index * 100)) * 1.8) : 300 + (month * 20) + (index * 100),
-          type: "Investimentos"
-        });
-        // Record 2
-        list.push({
-          id: `tx-inv-${idCounter++}`,
-          date: `${year}-${padMonth}-28`,
-          category: cat,
-          description: `Aporte ${cat} Complementar`,
-          account: accounts[(index * 4 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((450 + (month * 25) + (index * 150)) * 1.8) : 450 + (month * 25) + (index * 150),
-          type: "Investimentos"
-        });
-      });
-    }
-  }
-
-  return list.sort((a, b) => b.date.localeCompare(a.date));
-};
-
-const INITIAL_TRANSACTIONS = generateMockTransactions();
+import { deleteTransaction, fetchTransactions } from "@/services/api";
 
 // Predefined default categories based on user requirements
 const DEFAULT_RECEITAS = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Outras fontes"];
@@ -187,33 +78,19 @@ export default function CategoriasPage() {
       }
     }
 
-    // 3. Transactions
-    const savedTxs = localStorage.getItem("finseven-transactions");
-    if (savedTxs) {
+    // 3. Transactions from API
+    const loadAPI = async () => {
       try {
-        const parsed = JSON.parse(savedTxs) as Transaction[];
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        // Upgrade legacy mock dataset to the new high-density categories dataset
-        const hasNewMockData = sanitized.some(tx => tx.id.startsWith("tx-rec-"));
-        if (!hasNewMockData) {
-          setTransactions(INITIAL_TRANSACTIONS);
-        } else {
-          setTransactions(sanitized);
-        }
-      } catch (e) {
-        setTransactions(INITIAL_TRANSACTIONS);
+        const apiTxs = await fetchTransactions();
+        setTransactions(apiTxs);
+      } catch (error) {
+        showToast("Não foi possível carregar as transações do servidor.", "error");
+        setTransactions([]);
       }
-    } else {
-      setTransactions(INITIAL_TRANSACTIONS);
-    }
+      setIsLoaded(true);
+    };
 
-    setIsLoaded(true);
+    loadAPI();
   }, []);
 
   // Sync theme
@@ -237,12 +114,7 @@ export default function CategoriasPage() {
     }
   }, [customCategories, isLoaded]);
 
-  // Persist transactions
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
+
 
   // Adjust active selected category when selectedType changes
   useEffect(() => {
