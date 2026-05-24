@@ -1,36 +1,39 @@
-# FinSeven - Sistema de Controle Financeiro Pessoal 🚀
+# FinSeven - Instruções e Autenticação 🚀
 
-O **FinSeven** é um sistema completo de gestão de finanças pessoais desenvolvido como parte do projeto integrador da FIAP. Ele permite ao usuário realizar o controle de fluxo de caixa (Receitas, Despesas e Investimentos), gerenciar suas Contas Bancárias e customizar Categorias com persistência dinâmica no banco de dados Oracle Cloud.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-### Frontend:
-* **Framework**: Next.js 15 (React 19)
-* **Estilização**: Vanilla CSS & TailwindCSS (para transições dinâmicas e layouts responsivos)
-* **Ferramenta de Build**: Turbopack (`next dev`)
-
-### Backend:
-* **Framework**: Spring Boot (Java 17)
-* **Persistência**: Spring Data JPA (Hibernate)
-* **Banco de Dados**: Oracle Cloud Database (com configuração de Sequences)
+Este arquivo contém as especificações necessárias para a inicialização e teste do projeto integrador **FinSeven** (Frontend e Backend).
 
 ---
 
-## 🔑 Dados de Autenticação para Testes (Login)
+## ⚙️ 1. Instruções de Inicialização
 
-Para fins de avaliação rápida e testes acadêmicos, definimos as seguintes credenciais padrão (Admin bypass):
+### Backend (Spring Boot)
+1. Certifique-se de ter o Java JDK 17+ instalado.
+2. Abra o terminal na pasta `Fase_7Integration_finseven/Fintech-FinSeven`.
+3. Inicie o servidor executando o comando Maven Wrapper:
+   * **No Windows**: `.\mvnw spring-boot:run`
+   * **No Linux/macOS**: `./mvnw spring-boot:run`
+4. O servidor do backend estará rodando no endereço: `http://localhost:8080`
+
+### Frontend (Next.js)
+1. Certifique-se de ter o Node.js instalado.
+2. Abra o terminal na pasta `front-end_fintech_finseven`.
+3. Instale as dependências:
+   ```bash
+   npm install
+   ```
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+5. O frontend estará disponível e rodando no endereço: `http://localhost:3000`
+
+---
+
+## 🔑 2. Dados de Autenticação do Usuário de Teste (Login)
+
+Para realizar os testes e a avaliação rápida da plataforma, utilize o usuário de teste padrão abaixo:
 
 * **E-mail**: `admin@finseven.com`
 * **Senha**: `admin123`
 
-> 💡 **Nota**: O usuário também pode usar a guia **"Cadastrar"** na própria tela de autenticação para registrar novas contas. O sistema enviará os dados para o endpoint `POST /api/usuarios`, salvando-os de forma 100% dinâmica no banco de dados Oracle, permitindo realizar o login com as credenciais recém-criadas.
-
----
-
-## 💎 Funcionalidades Integradas de CRUD
-
-* **Contas Bancárias (`/conta-bancaria`)**: Cadastrar, Listar e Deletar contas de bancos diretamente na base Oracle.
-* **Transações (`/transacao`, `/receitas`, `/despesas`, `/investimentos`)**: Lançar transações e visualizar históricos detalhados integrados dinamicamente com filtros por datas e categorias.
-* **Categorias Customizadas (`/categorias`)**: Cadastro e exclusão de categorias dinâmicas que se integram instantaneamente em todas as listas de seleção de transações da plataforma.
+*Nota: Você também pode criar novas contas dinamicamente utilizando a aba "Cadastrar" na própria tela de autenticação, que persistirá os dados diretamente na base Oracle.*
