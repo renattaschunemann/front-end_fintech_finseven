@@ -117,25 +117,11 @@ export default function LoginPage() {
           return;
         }
 
-        // 1. Verificar se o e-mail ou CPF já estão cadastrados para evitar duplicidade
-        const checkRes = await fetch("http://localhost:8080/api/usuarios");
+        // 1. Verificar se o e-mail já está cadastrado para evitar duplicidade
+        const checkRes = await fetch(`http://localhost:8080/api/usuarios/email/${encodeURIComponent(email.trim())}`);
         if (checkRes.ok) {
-          const registeredLogins = await checkRes.json();
-          const emailExists = registeredLogins.some((item: any) => 
-            item.usuario?.email?.toLowerCase() === email.trim().toLowerCase()
-          );
-          if (emailExists) {
-            showToast("Este E-mail já está cadastrado no sistema.", "error");
-            return;
-          }
-
-          const cpfExists = registeredLogins.some((item: any) => 
-            item.usuario?.cpf === cpfNumber
-          );
-          if (cpfExists) {
-            showToast("Este CPF já está cadastrado no sistema.", "error");
-            return;
-          }
+          showToast("Este E-mail já está cadastrado no sistema.", "error");
+          return;
         }
 
         const newRegisterPayload = {
@@ -165,6 +151,7 @@ export default function LoginPage() {
 
         // Autentica a sessão ativa no localStorage conforme esperado pelas telas de Header e Sidebar
         localStorage.setItem("finseven-logged-user", JSON.stringify({
+          id: savedLogin.usuario.id,
           name: savedLogin.usuario.nome,
           cpf: String(savedLogin.usuario.cpf),
           email: savedLogin.usuario.email
@@ -188,8 +175,9 @@ export default function LoginPage() {
       // Caso padrão do Admin em caso de testes rápidos sem banco
       if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
         const defaultAdmin = {
+          id: 1,
           name: "Administrador FinSeven",
-          cpf: "12345678900",
+          cpf: "12345567890",
           email: "admin@finseven.com"
         };
         localStorage.setItem("finseven-logged-user", JSON.stringify(defaultAdmin));
@@ -202,25 +190,31 @@ export default function LoginPage() {
       }
 
       try {
-        const response = await fetch("http://localhost:8080/api/usuarios");
-        if (!response.ok) {
-          throw new Error("Erro de conexão ao buscar lista de usuários.");
-        }
+        const response = await fetch("http://localhost:8080/api/usuarios/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            senha: password
+          })
+        });
 
-        const registeredLogins = await response.json();
-        
-        const matchedLogin = registeredLogins.find((item: any) => 
-          item.usuario?.email?.toLowerCase() === email.trim().toLowerCase() && 
-          item.senha === password
-        );
-
-        if (!matchedLogin) {
+        if (response.status === 404) {
           showToast("E-mail ou senha inválidos.", "error");
           return;
         }
 
+        if (!response.ok) {
+          throw new Error("Erro de autenticação ou conexão com o servidor.");
+        }
+
+        const matchedLogin = await response.json();
+
         // Autentica a sessão do usuário
         localStorage.setItem("finseven-logged-user", JSON.stringify({
+          id: matchedLogin.usuario.id,
           name: matchedLogin.usuario.nome,
           cpf: String(matchedLogin.usuario.cpf),
           email: matchedLogin.usuario.email

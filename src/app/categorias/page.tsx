@@ -5,115 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { Transaction } from "@/interfaces";
-
-// Initial mock generator to sync with other views
-const generateMockTransactions = (): Transaction[] => {
-  const list: Transaction[] = [];
-  const startYear = 2024;
-  const startMonth = 0;
-  const endYear = 2026;
-  const endMonth = 4; // May 2026
-
-  let idCounter = 1;
-
-  const accounts = ["Itaú", "Banco do Brasil"];
-  
-  const categoriesReceitas = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer"];
-  const categoriesDespesas = [
-    "Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", 
-    "Lazer", "Água", "Luz", "Internet", "Aluguel"
-  ];
-  const categoriesInvestimentos = [
-    "Tesouro Direto", "CDB (Certificado de Depósito Bancário)", 
-    "LCI e LCA", "Poupança", "Debênture",
-    "Ações", "Fundos Imobiliários (FIIs)", "ETFs", "BDRs", "Criptomoedas"
-  ];
-
-  for (let year = startYear; year <= endYear; year++) {
-    const minM = year === startYear ? startMonth : 0;
-    const maxM = year === endYear ? endMonth : 11;
-
-    for (let month = minM; month <= maxM; month++) {
-      const padMonth = String(month + 1).padStart(2, "0");
-
-      // Generate 2 records for each Receitas category
-      categoriesReceitas.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-rec-${idCounter++}`,
-          date: `${year}-${padMonth}-05`,
-          category: cat,
-          description: `${cat} Quinzenal A`,
-          account: accounts[(index * 2) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((1200 + (month * 10) + (index * 150)) * 1.8) : 1200 + (month * 10) + (index * 150),
-          type: "Receitas"
-        });
-        // Record 2
-        list.push({
-          id: `tx-rec-${idCounter++}`,
-          date: `${year}-${padMonth}-20`,
-          category: cat,
-          description: `${cat} Quinzenal B`,
-          account: accounts[(index * 2 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((1500 + (month * 15) + (index * 200)) * 1.8) : 1500 + (month * 15) + (index * 200),
-          type: "Receitas"
-        });
-      });
-
-      // Generate 2 records for each Despesas category
-      categoriesDespesas.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-des-${idCounter++}`,
-          date: `${year}-${padMonth}-10`,
-          category: cat,
-          description: `Pagamento ${cat} A`,
-          account: accounts[(index * 3) % accounts.length],
-          value: year === 2026 && month === 4 ? -Math.round((100 + (month * 5) + (index * 45)) * 1.8) : -(100 + (month * 5) + (index * 45)),
-          type: "Despesas"
-        });
-        // Record 2
-        list.push({
-          id: `tx-des-${idCounter++}`,
-          date: `${year}-${padMonth}-25`,
-          category: cat,
-          description: `Consumo ${cat} B`,
-          account: accounts[(index * 3 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? -Math.round((120 + (month * 7) + (index * 60)) * 1.8) : -(120 + (month * 7) + (index * 60)),
-          type: "Despesas"
-        });
-      });
-
-      // Generate 2 records for each Investimentos category
-      categoriesInvestimentos.forEach((cat, index) => {
-        // Record 1
-        list.push({
-          id: `tx-inv-${idCounter++}`,
-          date: `${year}-${padMonth}-15`,
-          category: cat,
-          description: `Aporte ${cat} Inicial`,
-          account: accounts[(index * 4) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((300 + (month * 20) + (index * 100)) * 1.8) : 300 + (month * 20) + (index * 100),
-          type: "Investimentos"
-        });
-        // Record 2
-        list.push({
-          id: `tx-inv-${idCounter++}`,
-          date: `${year}-${padMonth}-28`,
-          category: cat,
-          description: `Aporte ${cat} Complementar`,
-          account: accounts[(index * 4 + 1) % accounts.length],
-          value: year === 2026 && month === 4 ? Math.round((450 + (month * 25) + (index * 150)) * 1.8) : 450 + (month * 25) + (index * 150),
-          type: "Investimentos"
-        });
-      });
-    }
-  }
-
-  return list.sort((a, b) => b.date.localeCompare(a.date));
-};
-
-const INITIAL_TRANSACTIONS = generateMockTransactions();
+import { deleteTransaction, fetchTransactions } from "@/services/api";
 
 // Predefined default categories based on user requirements
 const DEFAULT_RECEITAS = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Outras fontes"];
@@ -186,33 +78,19 @@ export default function CategoriasPage() {
       }
     }
 
-    // 3. Transactions
-    const savedTxs = localStorage.getItem("finseven-transactions");
-    if (savedTxs) {
+    // 3. Transactions from API
+    const loadAPI = async () => {
       try {
-        const parsed = JSON.parse(savedTxs) as Transaction[];
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        // Upgrade legacy mock dataset to the new high-density categories dataset
-        const hasNewMockData = sanitized.some(tx => tx.id.startsWith("tx-rec-"));
-        if (!hasNewMockData) {
-          setTransactions(INITIAL_TRANSACTIONS);
-        } else {
-          setTransactions(sanitized);
-        }
-      } catch (e) {
-        setTransactions(INITIAL_TRANSACTIONS);
+        const apiTxs = await fetchTransactions();
+        setTransactions(apiTxs);
+      } catch (error) {
+        showToast("Não foi possível carregar as transações do servidor.", "error");
+        setTransactions([]);
       }
-    } else {
-      setTransactions(INITIAL_TRANSACTIONS);
-    }
+      setIsLoaded(true);
+    };
 
-    setIsLoaded(true);
+    loadAPI();
   }, []);
 
   // Sync theme
@@ -236,12 +114,7 @@ export default function CategoriasPage() {
     }
   }, [customCategories, isLoaded]);
 
-  // Persist transactions
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
+
 
   // Adjust active selected category when selectedType changes
   useEffect(() => {
@@ -405,10 +278,17 @@ export default function CategoriasPage() {
     return dateStr;
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este lançamento?")) {
-      setTransactions(transactions.filter(t => t.id !== id));
-      showToast("Lançamento excluído com sucesso!", "info");
+  const handleDeleteTransaction = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta transação?")) {
+      const txToDelete = transactions.find(t => t.id === id);
+      if (!txToDelete) return;
+      try {
+        await deleteTransaction(id, txToDelete.type);
+        setTransactions(transactions.filter(t => t.id !== id));
+        showToast("Transação excluída com sucesso!", "info");
+      } catch (error) {
+        showToast("Erro ao excluir transação no servidor.", "error");
+      }
     }
   };
 
@@ -438,8 +318,8 @@ export default function CategoriasPage() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            router.push("/lancamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -464,7 +344,7 @@ export default function CategoriasPage() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento")}
+          onAddClick={() => router.push("/transacao")}
           showToast={showToast}
         />
 
@@ -679,7 +559,7 @@ export default function CategoriasPage() {
             }`}>
               <div className="flex items-center justify-between">
                 <span className={`text-xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                  Volume de Lançamentos ({selectedCategory})
+                  Volume de Transações ({selectedCategory})
                 </span>
                 <div className={`p-2 rounded-xl ${
                   selectedType === "Receitas"
@@ -721,7 +601,7 @@ export default function CategoriasPage() {
               </div>
               <div className="mt-3">
                 <span className={`text-2xl font-black ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-                  {categoryStats.count} Lançamentos
+                  {categoryStats.count} Transações
                 </span>
               </div>
             </div>
@@ -731,7 +611,7 @@ export default function CategoriasPage() {
             }`}>
               <div className="flex items-center justify-between">
                 <span className={`text-xs font-bold uppercase tracking-wider ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                  Média por Lançamento
+                  Média por Transação
                 </span>
                 <div className={`p-2 rounded-xl ${theme === "dark" ? "bg-violet-500/10 text-violet-400" : "bg-violet-50 text-violet-600"}`}>
                   <svg className="w-5 h-5 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -754,10 +634,10 @@ export default function CategoriasPage() {
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
               <div>
                 <h3 className={`text-base font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
-                  Histórico de Lançamentos
+                  Histórico de Transações
                 </h3>
                 <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                  Filtre os lançamentos de <span className="font-bold underline">{selectedCategory}</span> por períodos.
+                  Filtre as transações de <span className="font-bold underline">{selectedCategory}</span> por períodos.
                 </p>
               </div>
 
@@ -847,7 +727,7 @@ export default function CategoriasPage() {
                   {filteredTransactions.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                        Nenhum lançamento encontrado para a categoria <span className="font-bold underline">"{selectedCategory}"</span> no filtro de data selecionado.
+                        Nenhuma transação encontrada para a categoria <span className="font-bold underline">"{selectedCategory}"</span> no filtro de data selecionado.
                       </td>
                     </tr>
                   ) : (
@@ -892,7 +772,7 @@ export default function CategoriasPage() {
                                   ? "hover:bg-rose-600/10 border-rose-500/20 hover:border-rose-500/40 text-rose-400 hover:text-rose-350" 
                                   : "hover:bg-rose-50 border-rose-200 text-rose-650 hover:text-rose-700"
                               }`}
-                              title="Excluir lançamento"
+                              title="Excluir transação"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

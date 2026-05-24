@@ -9,136 +9,9 @@ import Chart from "@/components/Chart";
 import TransactionTable from "@/components/TransactionTable";
 import AddModal from "@/components/AddModal";
 import EditModal from "@/components/EditModal";
+import { fetchTransactions, createTransaction, updateTransaction, deleteTransaction } from "@/services/api";
 
-const generateMockTransactions = (): Transaction[] => {
-  const list: Transaction[] = [];
-  const startYear = 2024;
-  const startMonth = 0;
-  const endYear = 2026;
-  const endMonth = 4;
 
-  let idCounter = 1;
-
-  const accounts = ["Itaú", "Banco do Brasil"];
-  const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
-  const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
-  const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];
-
-  const descReceitas = [
-    ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
-    ["Projeto Freelance", "Consultoria Técnica", "Desenvolvimento Web"],
-    ["Rendimento FIIs", "Dividendos Ações", "Aplicação Renda Fixa"],
-    ["Reembolso Despesas", "Venda de Usado", "Bônus Anual"]
-  ];
-
-  const descDespesas = [
-    ["Compras Mensais", "Feira de Orgânicos", "Padaria e Lanches"],
-    ["Aluguel Residencial", "Condomínio", "Conta de Luz e Água"],
-    ["Combustível", "Mensalidade Metrô", "Aplicativo de Corrida"],
-    ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
-    ["Consulta Médica", "Farmácia", "Exames Clínicos"],
-    ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
-  ];
-
-  const descInvestimentos = [
-    ["Tesouro IPCA+ 2029", "Tesouro Selic 2027", "Tesouro Prefixado 2031"],
-    ["Ações ITUB4", "Ações VALE3", "Ações PETR4"],
-    ["Cotas MXRF11", "Cotas HGLG11", "Cotas KNRI11"],
-    ["Compra Bitcoin", "Compra Ethereum", "Aporte Cripto Basket"],
-    ["CDB Liquidez Diária", "LCI 90% CDI", "Debêntures Incentivadas"],
-    ["Aporte Fundo Multimercado", "Previdência Privada", "Investimento Internacional"]
-  ];
-
-  for (let year = startYear; year <= endYear; year++) {
-    const minM = year === startYear ? startMonth : 0;
-    const maxM = year === endYear ? endMonth : 11;
-
-    for (let month = minM; month <= maxM; month++) {
-      const padMonth = String(month + 1).padStart(2, "0");
-
-      // Base monthly revenue varies smoothly between 11000 and 13800 BRL to keep the average perfectly between 10000 and 15000
-      let monthlyBase = 11000 + (month * 200) + ((year - startYear) * 150);
-      if (year === 2026 && month === 4) {
-        // Set May 2026 to exactly 85% of the average of previous months (11950 BRL), since the user still has 7 days left in the month to record transactions
-        monthlyBase = Math.round(11950 * 0.85); // 10158 BRL
-      }
-
-      const dist = [0.28, 0.34, 0.38];
-      const recValues = dist.map(pct => Math.round(monthlyBase * pct));
-      const despValues = recValues.map(v => Math.round(v * 0.85));
-
-      for (let i = 0; i < 3; i++) {
-        const dayReceita = String(5 + i * 7).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayReceita}`;
-        
-        const catIdx = (year + month + i) % categoriesReceitas.length;
-        const cat = categoriesReceitas[catIdx];
-        const descList = descReceitas[catIdx];
-        const desc = descList[i % descList.length];
-        const value = recValues[i];
-
-        list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
-          category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: value,
-          type: "Receitas"
-        });
-      }
-
-      for (let i = 0; i < 3; i++) {
-        const dayDespesa = String(10 + i * 8).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayDespesa}`;
-
-        const catIdx = (year + month + i) % categoriesDespesas.length;
-        const cat = categoriesDespesas[catIdx];
-        const descList = descDespesas[catIdx];
-        const desc = descList[i % descList.length];
-        const value = despValues[i];
-
-        list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
-          category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: -value,
-          type: "Despesas"
-        });
-      }
-
-      for (let i = 0; i < 3; i++) {
-        const dayInvest = String(15 + i * 6).padStart(2, "0");
-        const dateStr = `${year}-${padMonth}-${dayInvest}`;
-
-        const catIdx = (year + month + i) % categoriesInvestimentos.length;
-        const cat = categoriesInvestimentos[catIdx];
-        const descList = descInvestimentos[catIdx];
-        const desc = descList[i % descList.length];
-        let value = 200 + (month * 20) + (i * 150);
-        if (year === 2026 && month === 4) {
-          value = Math.round(value * 1.8);
-        }
-
-        list.push({
-          id: `tx-gen-${idCounter++}`,
-          date: dateStr,
-          category: cat,
-          description: desc,
-          account: accounts[idCounter % accounts.length],
-          value: value,
-          type: "Investimentos"
-        });
-      }
-    }
-  }
-
-  return list.sort((a, b) => b.date.localeCompare(a.date));
-};
-
-const INITIAL_TRANSACTIONS: Transaction[] = generateMockTransactions();
 
 const MONTHLY_HISTORICAL_DATA = [
   { name: "Julho", receitas: 5300, despesas: 4100 },
@@ -152,7 +25,7 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -168,113 +41,36 @@ export default function Home() {
   const [formValue, setFormValue] = useState("");
   const [formDate, setFormDate] = useState("2026-05-23");
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const [userId, setUserId] = useState<number>(1);
 
   useEffect(() => {
     const loggedUser = localStorage.getItem("finseven-logged-user");
     if (!loggedUser) {
       router.push("/login");
+      return;
     }
+    try {
+      const parsed = JSON.parse(loggedUser);
+      if (parsed.id) {
+        setUserId(Number(parsed.id));
+      }
+    } catch (e) {}
   }, [router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("finseven-transactions");
-    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v4");
-    if (saved && mockUpdated === "true") {
+    const loadAPI = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        const hasInvestments = sanitized.some((t: any) => t.type === "Investimentos");
-        if (sanitized.length < 10 || !hasInvestments) {
-          const initialAccounts = [
-            {
-              id: "acc-itau",
-              bankName: "Itaú Unibanco",
-              bankCode: "341",
-              agency: "0123",
-              accountNumber: "98765-4",
-              initialBalance: 12500,
-              accountType: "Conta Corrente"
-            },
-            {
-              id: "acc-bb",
-              bankName: "Banco do Brasil S.A",
-              bankCode: "001",
-              agency: "4321",
-              accountNumber: "12345-6",
-              initialBalance: 8500,
-              accountType: "Conta Salário"
-            }
-          ];
-          localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
-          setTransactions(INITIAL_TRANSACTIONS);
-          localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
-        } else {
-          setTransactions(sanitized);
-        }
-      } catch (e) {
-        const initialAccounts = [
-          {
-            id: "acc-itau",
-            bankName: "Itaú Unibanco",
-            bankCode: "341",
-            agency: "0123",
-            accountNumber: "98765-4",
-            initialBalance: 12500,
-            accountType: "Conta Corrente"
-          },
-          {
-            id: "acc-bb",
-            bankName: "Banco do Brasil S.A",
-            bankCode: "001",
-            agency: "4321",
-            accountNumber: "12345-6",
-            initialBalance: 8500,
-            accountType: "Conta Salário"
-          }
-        ];
-        localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
-        setTransactions(INITIAL_TRANSACTIONS);
-        localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
+        const apiTxs = await fetchTransactions();
+        setTransactions(apiTxs);
+      } catch (error) {
+        showToast("Não foi possível carregar as transações do servidor.", "error");
+        setTransactions([]);
       }
-    } else {
-      const initialAccounts = [
-        {
-          id: "acc-itau",
-          bankName: "Itaú Unibanco",
-          bankCode: "341",
-          agency: "0123",
-          accountNumber: "98765-4",
-          initialBalance: 12500,
-          accountType: "Conta Corrente"
-        },
-        {
-          id: "acc-bb",
-          bankName: "Banco do Brasil S.A",
-          bankCode: "001",
-          agency: "4321",
-          accountNumber: "12345-6",
-          initialBalance: 8500,
-          accountType: "Conta Salário"
-        }
-      ];
-      localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
-      setTransactions(INITIAL_TRANSACTIONS);
-      localStorage.setItem("finseven-mock-updated-may2026-v4", "true");
-    }
-    setIsLoaded(true);
-  }, []);
+      setIsLoaded(true);
+    };
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
+    loadAPI();
+  }, []);
 
   useEffect(() => {
     if (toast) {
@@ -473,28 +269,32 @@ export default function Home() {
     setIsEditModalOpen(true);
   };
 
-  const handleAddTransaction = (e: React.FormEvent) => {
+  const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     const valNum = parseFloat(formValue.replace(",", "."));
     if (isNaN(valNum) || valNum <= 0) {
       showToast("Por favor, digite um valor válido.", "error");
       return;
     }
-    const newTx: Transaction = {
-      id: "tx-" + Date.now(),
+    const tempTx: Omit<Transaction, "id"> = {
       date: formDate,
       category: formCategory,
-      description: formDescription || (formType === "Receitas" ? "Receita avulsa" : "Despesa avulsa"),
+      description: formDescription || (formType === "Receitas" ? "Receita avulsa" : formType === "Investimentos" ? "Investimento avulso" : "Despesa avulsa"),
       account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
       type: formType
     };
-    setTransactions([newTx, ...transactions]);
-    setIsAddModalOpen(false);
-    showToast(`${formType === "Receitas" ? "Receita" : "Despesa"} lançada com sucesso!`);
+    try {
+      const savedTx = await createTransaction(tempTx, userId);
+      setTransactions([savedTx, ...transactions]);
+      setIsAddModalOpen(false);
+      showToast(`${formType === "Receitas" ? "Receita salva" : formType === "Investimentos" ? "Investimento cadastrado" : "Despesa salva"} com sucesso!`);
+    } catch (error) {
+      showToast("Erro ao salvar transação no servidor.", "error");
+    }
   };
 
-  const handleEditTransaction = (e: React.FormEvent) => {
+  const handleEditTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTransaction) return;
     const valNum = parseFloat(formValue.replace(",", "."));
@@ -508,19 +308,31 @@ export default function Home() {
       category: formCategory,
       description: formDescription,
       account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
       type: formType
     };
-    setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
-    setIsEditModalOpen(false);
-    setEditingTransaction(null);
-    showToast("Lançamento atualizado com sucesso!");
+    try {
+      const savedTx = await updateTransaction(updatedTx, userId);
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? savedTx : t));
+      setIsEditModalOpen(false);
+      setEditingTransaction(null);
+      showToast("Transação atualizada com sucesso!");
+    } catch (error) {
+      showToast("Erro ao atualizar transação no servidor.", "error");
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este lançamento?")) {
-      setTransactions(transactions.filter(t => t.id !== id));
-      showToast("Lançamento excluído com sucesso!", "info");
+  const handleDeleteTransaction = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta transação?")) {
+      const txToDelete = transactions.find(t => t.id === id);
+      if (!txToDelete) return;
+      try {
+        await deleteTransaction(id, txToDelete.type);
+        setTransactions(transactions.filter(t => t.id !== id));
+        showToast("Transação excluída com sucesso!", "info");
+      } catch (error) {
+        showToast("Erro ao excluir transação no servidor.", "error");
+      }
     }
   };
 
@@ -548,8 +360,8 @@ export default function Home() {
         setSidebarOpen={setSidebarOpen}
         activeMenu={activeMenu}
         setActiveMenu={(menu) => {
-          if (menu === "Lançamento") {
-            router.push("/lancamento");
+          if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -574,7 +386,7 @@ export default function Home() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento")}
+          onAddClick={() => router.push("/transacao")}
           showToast={showToast}
           onDateFilterChange={(filter) => setDateFilter(filter)}
         />
@@ -598,7 +410,7 @@ export default function Home() {
             onDeleteClick={handleDeleteTransaction}
             formatCurrency={formatCurrency}
             formatDateForDisplay={formatDateForDisplay}
-            onQuickAddClick={(type) => router.push("/lancamento?type=" + type)}
+            onQuickAddClick={(type) => router.push("/transacao?type=" + type)}
           />
         </div>
       </main>

@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Transaction } from "@/interfaces";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { createTransaction } from "@/services/api";
 
-function LancamentoContent() {
+function TransacaoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type");
@@ -15,7 +16,7 @@ function LancamentoContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [activeMenu, setActiveMenu] = useState("Lançamento");
+  const [activeMenu, setActiveMenu] = useState("Transação");
 
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
   const [formCategory, setFormCategory] = useState("Supermercado");
@@ -41,17 +42,46 @@ function LancamentoContent() {
   }, [formCategory]);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const [userId, setUserId] = useState<number>(1);
 
   useEffect(() => {
     const loggedUser = localStorage.getItem("finseven-logged-user");
     if (!loggedUser) {
       router.push("/login");
+      return;
     }
+    try {
+      const parsed = JSON.parse(loggedUser);
+      if (parsed.id) {
+        setUserId(Number(parsed.id));
+      }
+    } catch (e) {}
   }, [router]);
 
   useEffect(() => {
+    const saved = localStorage.getItem("finseven-transactions");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
+        const sanitized = parsed.map((t: any) => {
+          if (!allowed.includes(t.account)) {
+            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
+          }
+          return t;
+        });
+        setTransactions(sanitized);
+      } catch (e) {
+      }
+    }
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
+    }
+  }, [transactions, isLoaded]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
@@ -127,134 +157,23 @@ function LancamentoContent() {
       ? "Investimento avulso" 
       : "Despesa avulsa";
 
-    let bankId: number | null = null;
-    let categoryId: number | null = null;
-    let resolvedBank: any = null;
-    let resolvedUser: any = null;
+    const tempTx: Omit<Transaction, "id"> = {
+      date: formDate,
+      category: formCategory,
+      description: formDescription || defaultDesc,
+      account: formAccount,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
+      type: formType
+    };
 
     try {
-      // 1. Resolve Bank
-      const bankRes = await fetch("http://localhost:8080/api/bancos");
-      if (!bankRes.ok) throw new Error("Erro de rede ao buscar bancos.");
-      const banks = await bankRes.json();
-      let matchedBank = banks.find((b: any) => b.nome.toLowerCase() === formAccount.toLowerCase());
-      if (!matchedBank) {
-        // Criar banco no back-end
-        const createBankRes = await fetch("http://localhost:8080/api/bancos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            nome: formAccount,
-            agencia: "0001",
-            conta: "12345-X",
-            tipo: "Conta Corrente",
-            saldo: 0
-          })
-        });
-        if (!createBankRes.ok) throw new Error("Erro ao criar banco de contingência.");
-        matchedBank = await createBankRes.json();
-      }
-      bankId = matchedBank.idBanco;
-      resolvedBank = matchedBank;
-
-      // 2. Resolve Category
-      const catRes = await fetch("http://localhost:8080/api/categorias");
-      if (!catRes.ok) throw new Error("Erro de rede ao buscar categorias.");
-      const categories = await catRes.json();
-      let matchedCat = categories.find((c: any) => c.descricao.toLowerCase() === formCategory.toLowerCase());
-      if (!matchedCat) {
-        // Criar categoria no back-end
-        const createCatRes = await fetch("http://localhost:8080/api/categorias", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            descricao: formCategory,
-            tiposTransacao: formType === "Receitas" ? "RECEITA" : "DESPESA"
-          })
-        });
-        if (!createCatRes.ok) throw new Error("Erro ao criar categoria de contingência.");
-        matchedCat = await createCatRes.json();
-      }
-      categoryId = matchedCat.id;
-
-      // 3. Resolve User (for Investments)
-      const loggedUserStr = localStorage.getItem("finseven-logged-user");
-      if (loggedUserStr) {
-        const loggedUser = JSON.parse(loggedUserStr);
-        const usersRes = await fetch("http://localhost:8080/api/usuarios");
-        if (usersRes.ok) {
-          const logins = await usersRes.json();
-          const matchedLogin = logins.find((item: any) => 
-            item.usuario?.email?.toLowerCase() === loggedUser.email?.toLowerCase()
-          );
-          if (matchedLogin) {
-            resolvedUser = matchedLogin.usuario;
-          }
-        }
-      }
-    } catch (e: any) {
-      showToast("Erro de integração ao resolver dados: " + e.message, "error");
-      return;
-    }
-
-    try {
-      if (formType === "Investimentos") {
-        // Post as Investimento
-        const investmentPayload = {
-          produto: formCategory,
-          valorAplicado: valNum,
-          taxaRendimento: 0.08, // default 8%
-          dataAplicacao: formDate,
-          usuario: resolvedUser,
-          banco: resolvedBank
-        };
-
-        const response = await fetch("http://localhost:8080/api/investimentos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(investmentPayload)
-        });
-
-        if (!response.ok) {
-          throw new Error("Erro ao salvar investimento (Código " + response.status + ")");
-        }
-      } else {
-        // Post as Transacao (Receita or Despesa)
-        const isReceita = formType === "Receitas";
-        const endpoint = isReceita ? "receitas" : "despesas";
-        
-        const transacaoPayload: any = {
-          idBanco: bankId,
-          idCategoria: categoryId,
-          valor: valNum,
-          data: formDate,
-          descricao: formDescription || defaultDesc
-        };
-
-        if (!isReceita) {
-          // Despesa entity has formapagamento in Java model!
-          transacaoPayload.formaPagamento = "Dinheiro"; // default
-        }
-
-        const response = await fetch(`http://localhost:8080/api/transacoes/${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(transacaoPayload)
-        });
-
-        if (!response.ok) {
-          throw new Error("Erro ao salvar transação no back-end (Código " + response.status + ")");
-        }
-      }
-
-      showToast("Lançamento efetuado com sucesso!", "success");
-
+      await createTransaction(tempTx, userId);
+      showToast("Transação efetuada com sucesso!", "success");
       setTimeout(() => {
         router.push("/");
       }, 1200);
-
-    } catch (error: any) {
-      showToast("Erro ao persistir lançamento: " + error.message, "error");
+    } catch (error) {
+      showToast("Erro ao efetuar transação no servidor.", "error");
     }
   };
 
@@ -292,8 +211,8 @@ function LancamentoContent() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            setActiveMenu("Lançamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            setActiveMenu("Transação");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -341,7 +260,7 @@ function LancamentoContent() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className={`text-xl font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-slate-850"}`}>Novo Lançamento</h2>
+                  <h2 className={`text-xl font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-slate-850"}`}>Nova Transação</h2>
                   <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>Gere movimentações financeiras completas de fluxo.</p>
                 </div>
               </div>
@@ -365,7 +284,7 @@ function LancamentoContent() {
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider block mb-2.5 ${
                   theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>Tipo de Lançamento</label>
+                }`}>Tipo de Transação</label>
                 
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -510,7 +429,7 @@ function LancamentoContent() {
                 <div>
                   <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
-                  }`}>Data do Lançamento</label>
+                  }`}>Data da Transação</label>
                   <input
                     type="date"
                     required
@@ -559,7 +478,7 @@ function LancamentoContent() {
                       : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
                   }`}
                 >
-                  Cancelar Lançamento
+                  Cancelar Transação
                 </button>
 
                 <button
@@ -572,7 +491,7 @@ function LancamentoContent() {
                       : "bg-rose-600 hover:bg-rose-500 shadow-rose-500/20"
                   }`}
                 >
-                  Salvar Lançamento
+                  Salvar Transação
                 </button>
               </div>
             </form>
@@ -583,14 +502,14 @@ function LancamentoContent() {
   );
 }
 
-export default function LancamentoPage() {
+export default function TransacaoPage() {
   return (
     <Suspense fallback={
       <div className="h-screen w-screen flex items-center justify-center bg-[#0b0f19] text-slate-400">
         Carregando formulário...
       </div>
     }>
-      <LancamentoContent />
+      <TransacaoContent />
     </Suspense>
   );
 }

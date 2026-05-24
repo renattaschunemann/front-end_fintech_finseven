@@ -7,136 +7,11 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import TransactionTable from "@/components/TransactionTable";
 import EditModal from "@/components/EditModal";
+import { fetchTransactions, updateTransaction, deleteTransaction } from "@/services/api";
 
 function ReceitasContent() {
   const router = useRouter();
-  const generateMockTransactions = (): Transaction[] => {
-    const list: Transaction[] = [];
-    const startYear = 2024;
-    const startMonth = 0;
-    const endYear = 2026;
-    const endMonth = 4;
 
-    let idCounter = 1;
-
-    const accounts = ["Itaú", "Banco do Brasil"];
-    const categoriesReceitas = ["Salário", "Freelance", "Rendimentos", "Outros"];
-    const categoriesDespesas = ["Supermercado", "Aluguel", "Transporte", "Lazer", "Saúde", "Outros"];
-    const categoriesInvestimentos = ["Tesouro Direto", "Ações", "FIIs", "Cripto", "Renda Fixa", "Outros"];
-
-    const descReceitas = [
-      ["Salário Mensal", "Rendimento Mensal", "Prêmio Trimestral"],
-      ["Projeto Freelance", "Consultoria Técnica", "Desenvolvimento Web"],
-      ["Rendimento FIIs", "Dividendos Ações", "Aplicação Renda Fixa"],
-      ["Reembolso Despesas", "Venda de Usado", "Bônus Anual"]
-    ];
-
-    const descDespesas = [
-      ["Compras Mensais", "Feira de Orgânicos", "Padaria e Lanches"],
-      ["Aluguel Residencial", "Condomínio", "Conta de Luz e Água"],
-      ["Combustível", "Mensalidade Metrô", "Aplicativo de Corrida"],
-      ["Cinema e Jantar", "Viagem Fim de Semana", "Assinatura Streaming"],
-      ["Consulta Médica", "Farmácia", "Exames Clínicos"],
-      ["Material de Escritório", "Presente de Aniversário", "Manutenção Casa"]
-    ];
-
-    const descInvestimentos = [
-      ["Tesouro IPCA+ 2029", "Tesouro Selic 2027", "Tesouro Prefixado 2031"],
-      ["Ações ITUB4", "Ações VALE3", "Ações PETR4"],
-      ["Cotas MXRF11", "Cotas HGLG11", "Cotas KNRI11"],
-      ["Compra Bitcoin", "Compra Ethereum", "Aporte Cripto Basket"],
-      ["CDB Liquidez Diária", "LCI 90% CDI", "Debêntures Incentivadas"],
-      ["Aporte Fundo Multimercado", "Previdência Privada", "Investimento Internacional"]
-    ];
-
-    for (let year = startYear; year <= endYear; year++) {
-      const minM = year === startYear ? startMonth : 0;
-      const maxM = year === endYear ? endMonth : 11;
-
-      for (let month = minM; month <= maxM; month++) {
-        const padMonth = String(month + 1).padStart(2, "0");
-
-        // Base monthly revenue varies smoothly between 11000 and 13800 BRL to keep the average perfectly between 10000 and 15000
-        let monthlyBase = 11000 + (month * 200) + ((year - startYear) * 150);
-        if (year === 2026 && month === 4) {
-          // Set May 2026 to exactly 85% of the average of previous months (11950 BRL), since the user still has 7 days left in the month to record transactions
-          monthlyBase = Math.round(11950 * 0.85); // 10158 BRL
-        }
-
-        const dist = [0.28, 0.34, 0.38];
-        const recValues = dist.map(pct => Math.round(monthlyBase * pct));
-        const despValues = recValues.map(v => Math.round(v * 0.85));
-
-        for (let i = 0; i < 3; i++) {
-          const dayReceita = String(5 + i * 7).padStart(2, "0");
-          const dateStr = `${year}-${padMonth}-${dayReceita}`;
-          
-          const catIdx = (year + month + i) % categoriesReceitas.length;
-          const cat = categoriesReceitas[catIdx];
-          const descList = descReceitas[catIdx];
-          const desc = descList[i % descList.length];
-          const value = recValues[i];
-
-          list.push({
-            id: `tx-gen-${idCounter++}`,
-            date: dateStr,
-            category: cat,
-            description: desc,
-            account: accounts[idCounter % accounts.length],
-            value: value,
-            type: "Receitas"
-          });
-        }
-
-        for (let i = 0; i < 3; i++) {
-          const dayDespesa = String(10 + i * 8).padStart(2, "0");
-          const dateStr = `${year}-${padMonth}-${dayDespesa}`;
-
-          const catIdx = (year + month + i) % categoriesDespesas.length;
-          const cat = categoriesDespesas[catIdx];
-          const descList = descDespesas[catIdx];
-          const desc = descList[i % descList.length];
-          const value = despValues[i];
-
-          list.push({
-            id: `tx-gen-${idCounter++}`,
-            date: dateStr,
-            category: cat,
-            description: desc,
-            account: accounts[idCounter % accounts.length],
-            value: -value,
-            type: "Despesas"
-          });
-        }
-
-        for (let i = 0; i < 3; i++) {
-          const dayInvest = String(15 + i * 6).padStart(2, "0");
-          const dateStr = `${year}-${padMonth}-${dayInvest}`;
-
-          const catIdx = (year + month + i) % categoriesInvestimentos.length;
-          const cat = categoriesInvestimentos[catIdx];
-          const descList = descInvestimentos[catIdx];
-          const desc = descList[i % descList.length];
-          let value = 200 + (month * 20) + (i * 150);
-          if (year === 2026 && month === 4) {
-            value = Math.round(value * 1.8);
-          }
-
-          list.push({
-            id: `tx-gen-${idCounter++}`,
-            date: dateStr,
-            category: cat,
-            description: desc,
-            account: accounts[idCounter % accounts.length],
-            value: value,
-            type: "Investimentos"
-          });
-        }
-      }
-    }
-
-    return list.sort((a, b) => b.date.localeCompare(a.date));
-  };
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -160,63 +35,35 @@ function ReceitasContent() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
+  const [userId, setUserId] = useState<number>(1);
+
   useEffect(() => {
     const loggedUser = localStorage.getItem("finseven-logged-user");
     if (!loggedUser) {
       router.push("/login");
+      return;
     }
+    try {
+      const parsed = JSON.parse(loggedUser);
+      if (parsed.id) {
+        setUserId(Number(parsed.id));
+      }
+    } catch (e) {}
   }, [router]);
 
-  // Load transactions, categories, and banks from back-end
   useEffect(() => {
-    const fetchTransactionsData = async () => {
+    const loadAPI = async () => {
       try {
-        // 1. Fetch categories for lookup
-        const catRes = await fetch("http://localhost:8080/api/categorias");
-        const categories = catRes.ok ? await catRes.json() : [];
-        const categoryMap = new Map<number, string>();
-        categories.forEach((c: any) => categoryMap.set(c.id, c.descricao));
-
-        // 2. Fetch banks for lookup
-        const bankRes = await fetch("http://localhost:8080/api/bancos");
-        const banks = bankRes.ok ? await bankRes.json() : [];
-        const bankMap = new Map<number, string>();
-        banks.forEach((b: any) => bankMap.set(b.idBanco, b.nome));
-
-        // 3. Fetch transactions
-        const txRes = await fetch("http://localhost:8080/api/transacoes");
-        if (!txRes.ok) {
-          throw new Error("Erro de rede ao buscar lançamentos (Código " + txRes.status + ")");
-        }
-        const data = await txRes.json();
-
-        // 4. Map transactions
-        const mappedTransactions: Transaction[] = data.map((t: any) => {
-          const type: "Receitas" | "Despesas" = t.tipo === "RECEITA" ? "Receitas" : "Despesas";
-          const resolvedCategory = categoryMap.get(t.idCategoria) || "Outros";
-          const resolvedBank = bankMap.get(t.idBanco) || "Outros";
-          
-          return {
-            id: String(t.id),
-            date: t.data,
-            category: resolvedCategory,
-            description: t.descricao,
-            account: resolvedBank,
-            value: type === "Receitas" ? t.valor : -t.valor,
-            type: type
-          };
-        });
-
-        setTransactions(mappedTransactions);
-      } catch (error: any) {
-        showToast("Erro ao carregar lançamentos: " + error.message, "error");
+        const apiTxs = await fetchTransactions();
+        setTransactions(apiTxs);
+      } catch (error) {
+        showToast("Não foi possível carregar as transações do servidor.", "error");
         setTransactions([]);
-      } finally {
-        setIsLoaded(true);
       }
+      setIsLoaded(true);
     };
 
-    fetchTransactionsData();
+    loadAPI();
   }, []);
 
   useEffect(() => {
@@ -334,106 +181,36 @@ function ReceitasContent() {
       showToast("Por favor, digite um valor válido.", "error");
       return;
     }
-
+    const updatedTx: Transaction = {
+      ...editingTransaction,
+      date: formDate,
+      category: formCategory,
+      description: formDescription,
+      account: formAccount,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
+      type: formType
+    };
     try {
-      // 1. Resolve category ID
-      const catRes = await fetch("http://localhost:8080/api/categorias");
-      const categories = catRes.ok ? await catRes.json() : [];
-      let matchedCat = categories.find((c: any) => c.descricao.toLowerCase() === formCategory.toLowerCase());
-      if (!matchedCat) {
-        const createCatRes = await fetch("http://localhost:8080/api/categorias", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            descricao: formCategory,
-            tiposTransacao: formType === "Receitas" ? "RECEITA" : "DESPESA"
-          })
-        });
-        if (createCatRes.ok) matchedCat = await createCatRes.json();
-      }
-      const categoryId = matchedCat?.id || 1;
-
-      // 2. Resolve bank ID
-      const bankRes = await fetch("http://localhost:8080/api/bancos");
-      const banks = bankRes.ok ? await bankRes.json() : [];
-      let matchedBank = banks.find((b: any) => b.nome.toLowerCase() === formAccount.toLowerCase());
-      if (!matchedBank) {
-        const createBankRes = await fetch("http://localhost:8080/api/bancos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            nome: formAccount,
-            agencia: "0001",
-            conta: "12345-X",
-            tipo: "Conta Corrente",
-            saldo: 0
-          })
-        });
-        if (createBankRes.ok) matchedBank = await createBankRes.json();
-      }
-      const bankId = matchedBank?.idBanco || 1;
-
-      // 3. Make PUT request
-      const isReceita = formType === "Receitas";
-      const endpoint = isReceita ? "receitas" : "despesas";
-      
-      const payload: any = {
-        idBanco: bankId,
-        idCategoria: categoryId,
-        valor: valNum,
-        data: formDate,
-        descricao: formDescription
-      };
-
-      if (!isReceita) {
-        payload.formaPagamento = "Dinheiro";
-      }
-
-      const response = await fetch(`http://localhost:8080/api/transacoes/${endpoint}/${editingTransaction.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar transação no servidor (Código " + response.status + ")");
-      }
-
-      const updatedTx: Transaction = {
-        ...editingTransaction,
-        date: formDate,
-        category: formCategory,
-        description: formDescription,
-        account: formAccount,
-        value: isReceita ? valNum : -valNum,
-        type: formType
-      };
-
-      setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
+      const savedTx = await updateTransaction(updatedTx, userId);
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? savedTx : t));
       setIsEditModalOpen(false);
       setEditingTransaction(null);
-      showToast("Lançamento atualizado com sucesso!");
-
-    } catch (error: any) {
-      showToast("Erro ao atualizar no back-end: " + error.message, "error");
+      showToast("Transação atualizada com sucesso!");
+    } catch (error) {
+      showToast("Erro ao atualizar transação no servidor.", "error");
     }
   };
 
   const handleDeleteTransaction = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este lançamento?")) {
+    if (confirm("Tem certeza que deseja excluir esta transação?")) {
+      const txToDelete = transactions.find(t => t.id === id);
+      if (!txToDelete) return;
       try {
-        const response = await fetch(`http://localhost:8080/api/transacoes/${id}`, {
-          method: "DELETE"
-        });
-
-        if (!response.ok) {
-          throw new Error("Erro do servidor ao excluir lançamento (Código " + response.status + ")");
-        }
-
+        await deleteTransaction(id, txToDelete.type);
         setTransactions(transactions.filter(t => t.id !== id));
-        showToast("Lançamento excluído com sucesso!", "info");
-      } catch (error: any) {
-        showToast("Erro ao excluir do back-end: " + error.message, "error");
+        showToast("Transação excluída com sucesso!", "info");
+      } catch (error) {
+        showToast("Erro ao excluir transação no servidor.", "error");
       }
     }
   };
@@ -464,8 +241,8 @@ function ReceitasContent() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            router.push("/lancamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             setActiveMenu("Receitas");
           } else if (menu === "Despesas") {
@@ -490,7 +267,7 @@ function ReceitasContent() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento?type=Receitas")}
+          onAddClick={() => router.push("/transacao?type=Receitas")}
           showToast={showToast}
         />
 

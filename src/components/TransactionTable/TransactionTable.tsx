@@ -18,7 +18,7 @@ export default function TransactionTable({
     }`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 className={`text-lg font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>Últimos Lançamentos</h3>
+          <h3 className={`text-lg font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>Últimas Transações</h3>
           <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>Listagem de movimentações financeiras recentes no sistema.</p>
         </div>
 
@@ -69,7 +69,7 @@ export default function TransactionTable({
             {transactions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
-                  Nenhum lançamento cadastrado neste mês.
+                  Nenhuma transação cadastrada neste mês.
                 </td>
               </tr>
             ) : (
@@ -125,7 +125,7 @@ export default function TransactionTable({
                               ? "hover:bg-rose-600/10 border-rose-500/20 hover:border-rose-500/40 text-rose-400 hover:text-rose-300" 
                               : "hover:bg-rose-50 border-rose-200 text-rose-650 hover:text-rose-700"
                           }`}
-                          title="Excluir lançamento"
+                          title="Excluir transação"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
