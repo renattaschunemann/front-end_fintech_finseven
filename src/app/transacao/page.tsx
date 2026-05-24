@@ -23,6 +23,7 @@ function TransacaoContent() {
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
   const [bankOptions, setBankOptions] = useState<string[]>(["Itaú", "Banco do Brasil", "Outros"]);
+  const [apiCategories, setApiCategories] = useState<any[]>([]);
   const [formValue, setFormValue] = useState("");
   const [formDate, setFormDate] = useState("2026-05-23");
 
@@ -60,11 +61,15 @@ function TransacaoContent() {
   }, [router]);
 
   useEffect(() => {
-    const loadBanks = async () => {
+    const loadBanksAndCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/bancos");
-        if (res.ok) {
-          const data = await res.json();
+        const [bancosRes, catsRes] = await Promise.all([
+          fetch("http://localhost:8080/api/bancos"),
+          fetch("http://localhost:8080/api/categorias")
+        ]);
+
+        if (bancosRes.ok) {
+          const data = await bancosRes.json();
           if (Array.isArray(data) && data.length > 0) {
             const names = data.map((b: any) => b.nome);
             const uniqueNames = Array.from(new Set(names)) as string[];
@@ -77,12 +82,17 @@ function TransacaoContent() {
             }
           }
         }
+
+        if (catsRes.ok) {
+          const catsData = await catsRes.json();
+          setApiCategories(catsData);
+        }
       } catch (error) {
-        console.error("Erro ao carregar bancos:", error);
+        console.error("Erro ao carregar dados de inicialização:", error);
       }
     };
 
-    loadBanks();
+    loadBanksAndCategories();
   }, []);
 
   useEffect(() => {
@@ -155,19 +165,34 @@ function TransacaoContent() {
   };
 
   const getCategories = () => {
+    let defaults: string[] = [];
+    let dbType = "";
+
     if (formType === "Receitas") {
-      return ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Rendimentos", "Outros"];
+      defaults = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Rendimentos", "Outros"];
+      dbType = "RECEITA";
     } else if (formType === "Investimentos") {
+      dbType = "INVESTIMENTO";
       if (investSubgroup === "Renda Fixa") {
-        return ["Tesouro Direto", "CDB", "LCI/LCA", "Poupança", "Debêntures", "Outros"];
+        defaults = ["Tesouro Direto", "CDB", "LCI/LCA", "Poupança", "Debêntures", "Outros"];
       } else if (investSubgroup === "Renda Variável") {
-        return ["Ações", "FIIs", "ETFs", "BDRs", "Outros"];
+        defaults = ["Ações", "FIIs", "ETFs", "BDRs", "Outros"];
       } else {
-        return ["Bitcoin", "Ethereum", "Solana", "Stablecoins", "Outros"];
+        defaults = ["Bitcoin", "Ethereum", "Solana", "Stablecoins", "Outros"];
       }
     } else {
-      return ["Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", "Lazer", "Água", "Luz", "Internet", "Aluguel", "Cartão de Crédito", "Outros"];
+      defaults = ["Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", "Lazer", "Água", "Luz", "Internet", "Aluguel", "Cartão de Crédito", "Outros"];
+      dbType = "DESPESA";
     }
+
+    // Filter matching categories from API
+    const matchingDb = apiCategories
+      .filter((cat: any) => cat.tiposTransacao && cat.tiposTransacao.toUpperCase() === dbType)
+      .map((cat: any) => cat.descricao);
+
+    // Combine and deduplicate
+    const combined = Array.from(new Set([...defaults, ...matchingDb])) as string[];
+    return combined;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

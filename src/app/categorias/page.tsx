@@ -68,23 +68,42 @@ export default function CategoriasPage() {
       setTheme(savedTheme);
     }
 
-    // 2. Custom Categories
-    const savedCustomCats = localStorage.getItem("finseven-custom-categories");
-    if (savedCustomCats) {
-      try {
-        setCustomCategories(JSON.parse(savedCustomCats));
-      } catch (e) {
-        // use defaults
-      }
-    }
-
-    // 3. Transactions from API
+    // 2. Load custom categories and transactions in parallel
     const loadAPI = async () => {
       try {
-        const apiTxs = await fetchTransactions();
-        setTransactions(apiTxs);
+        const [catsRes, txsRes] = await Promise.all([
+          fetch("http://localhost:8080/api/categorias"),
+          fetchTransactions()
+        ]);
+
+        if (catsRes.ok) {
+          const catsData = await catsRes.json();
+          const resCats: string[] = [];
+          const despCats: string[] = [];
+          const invCats: string[] = [];
+          
+          catsData.forEach((cat: any) => {
+            const type = cat.tiposTransacao ? cat.tiposTransacao.toUpperCase() : "";
+            const name = cat.descricao;
+            if (type === "RECEITA" || type === "RECEITAS") {
+              resCats.push(name);
+            } else if (type === "DESPESA" || type === "DESPESAS") {
+              despCats.push(name);
+            } else {
+              invCats.push(name);
+            }
+          });
+          
+          setCustomCategories({
+            Receitas: resCats,
+            Despesas: despCats,
+            Investimentos: invCats,
+          });
+        }
+
+        setTransactions(txsRes);
       } catch (error) {
-        showToast("Não foi possível carregar as transações do servidor.", "error");
+        showToast("Não foi possível carregar as informações do servidor.", "error");
         setTransactions([]);
       }
       setIsLoaded(true);
@@ -106,13 +125,6 @@ export default function CategoriasPage() {
       localStorage.setItem("finseven-theme", "dark");
     }
   }, [theme]);
-
-  // Persist custom categories
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-custom-categories", JSON.stringify(customCategories));
-    }
-  }, [customCategories, isLoaded]);
 
 
 
@@ -186,7 +198,7 @@ export default function CategoriasPage() {
   };
 
   // Save new custom category
-  const handleSaveCustomCategory = (e: React.FormEvent) => {
+  const handleSaveCustomCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = customCategoryName.trim();
     if (!cleanName) {
@@ -200,16 +212,35 @@ export default function CategoriasPage() {
       return;
     }
 
-    setCustomCategories((prev) => {
-      const updated = { ...prev };
-      updated[selectedType] = [...updated[selectedType], cleanName];
-      return updated;
-    });
+    try {
+      const payload = {
+        descricao: cleanName,
+        tiposTransacao: selectedType === "Receitas" ? "RECEITA" : selectedType === "Despesas" ? "DESPESA" : "INVESTIMENTO"
+      };
 
-    setSelectedCategory(cleanName);
-    setWritingCustom(false);
-    setCustomCategoryName("");
-    showToast(`Categoria "${cleanName}" cadastrada com sucesso!`, "success");
+      const res = await fetch("http://localhost:8080/api/categorias", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Erro de servidor.");
+
+      setCustomCategories((prev) => {
+        const updated = { ...prev };
+        updated[selectedType] = [...updated[selectedType], cleanName];
+        return updated;
+      });
+
+      setSelectedCategory(cleanName);
+      setWritingCustom(false);
+      setCustomCategoryName("");
+      showToast(`Categoria "${cleanName}" cadastrada com sucesso no banco de dados!`, "success");
+    } catch (error) {
+      showToast("Erro ao cadastrar categoria no servidor.", "error");
+    }
   };
 
   // Date window filters calculator
