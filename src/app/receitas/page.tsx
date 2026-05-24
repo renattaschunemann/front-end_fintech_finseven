@@ -167,39 +167,57 @@ function ReceitasContent() {
     }
   }, [router]);
 
+  // Load transactions, categories, and banks from back-end
   useEffect(() => {
-    const saved = localStorage.getItem("finseven-transactions");
-    const initialTxs = generateMockTransactions();
-    if (saved) {
+    const fetchTransactionsData = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        const hasInvestments = sanitized.some((t: any) => t.type === "Investimentos");
-        if (sanitized.length < 10 || !hasInvestments) {
-          setTransactions(initialTxs);
-        } else {
-          setTransactions(sanitized);
-        }
-      } catch (e) {
-        setTransactions(initialTxs);
-      }
-    } else {
-      setTransactions(initialTxs);
-    }
-    setIsLoaded(true);
-  }, []);
+        // 1. Fetch categories for lookup
+        const catRes = await fetch("http://localhost:8080/api/categorias");
+        const categories = catRes.ok ? await catRes.json() : [];
+        const categoryMap = new Map<number, string>();
+        categories.forEach((c: any) => categoryMap.set(c.id, c.descricao));
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
+        // 2. Fetch banks for lookup
+        const bankRes = await fetch("http://localhost:8080/api/bancos");
+        const banks = bankRes.ok ? await bankRes.json() : [];
+        const bankMap = new Map<number, string>();
+        banks.forEach((b: any) => bankMap.set(b.idBanco, b.nome));
+
+        // 3. Fetch transactions
+        const txRes = await fetch("http://localhost:8080/api/transacoes");
+        if (!txRes.ok) {
+          throw new Error("Erro de rede ao buscar lançamentos (Código " + txRes.status + ")");
+        }
+        const data = await txRes.json();
+
+        // 4. Map transactions
+        const mappedTransactions: Transaction[] = data.map((t: any) => {
+          const type: "Receitas" | "Despesas" = t.tipo === "RECEITA" ? "Receitas" : "Despesas";
+          const resolvedCategory = categoryMap.get(t.idCategoria) || "Outros";
+          const resolvedBank = bankMap.get(t.idBanco) || "Outros";
+          
+          return {
+            id: String(t.id),
+            date: t.data,
+            category: resolvedCategory,
+            description: t.descricao,
+            account: resolvedBank,
+            value: type === "Receitas" ? t.valor : -t.valor,
+            type: type
+          };
+        });
+
+        setTransactions(mappedTransactions);
+      } catch (error: any) {
+        showToast("Erro ao carregar lançamentos: " + error.message, "error");
+        setTransactions([]);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    fetchTransactionsData();
+  }, []);
 
   useEffect(() => {
     if (toast) {
@@ -308,7 +326,7 @@ function ReceitasContent() {
     setIsEditModalOpen(true);
   };
 
-  const handleEditTransaction = (e: React.FormEvent) => {
+  const handleEditTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTransaction) return;
     const valNum = parseFloat(formValue.replace(",", "."));
@@ -316,25 +334,107 @@ function ReceitasContent() {
       showToast("Por favor, digite um valor válido.", "error");
       return;
     }
-    const updatedTx: Transaction = {
-      ...editingTransaction,
-      date: formDate,
-      category: formCategory,
-      description: formDescription,
-      account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
-      type: formType
-    };
-    setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
-    setIsEditModalOpen(false);
-    setEditingTransaction(null);
-    showToast("Lançamento atualizado com sucesso!");
+
+    try {
+      // 1. Resolve category ID
+      const catRes = await fetch("http://localhost:8080/api/categorias");
+      const categories = catRes.ok ? await catRes.json() : [];
+      let matchedCat = categories.find((c: any) => c.descricao.toLowerCase() === formCategory.toLowerCase());
+      if (!matchedCat) {
+        const createCatRes = await fetch("http://localhost:8080/api/categorias", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            descricao: formCategory,
+            tiposTransacao: formType === "Receitas" ? "RECEITA" : "DESPESA"
+          })
+        });
+        if (createCatRes.ok) matchedCat = await createCatRes.json();
+      }
+      const categoryId = matchedCat?.id || 1;
+
+      // 2. Resolve bank ID
+      const bankRes = await fetch("http://localhost:8080/api/bancos");
+      const banks = bankRes.ok ? await bankRes.json() : [];
+      let matchedBank = banks.find((b: any) => b.nome.toLowerCase() === formAccount.toLowerCase());
+      if (!matchedBank) {
+        const createBankRes = await fetch("http://localhost:8080/api/bancos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: formAccount,
+            agencia: "0001",
+            conta: "12345-X",
+            tipo: "Conta Corrente",
+            saldo: 0
+          })
+        });
+        if (createBankRes.ok) matchedBank = await createBankRes.json();
+      }
+      const bankId = matchedBank?.idBanco || 1;
+
+      // 3. Make PUT request
+      const isReceita = formType === "Receitas";
+      const endpoint = isReceita ? "receitas" : "despesas";
+      
+      const payload: any = {
+        idBanco: bankId,
+        idCategoria: categoryId,
+        valor: valNum,
+        data: formDate,
+        descricao: formDescription
+      };
+
+      if (!isReceita) {
+        payload.formaPagamento = "Dinheiro";
+      }
+
+      const response = await fetch(`http://localhost:8080/api/transacoes/${endpoint}/${editingTransaction.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar transação no servidor (Código " + response.status + ")");
+      }
+
+      const updatedTx: Transaction = {
+        ...editingTransaction,
+        date: formDate,
+        category: formCategory,
+        description: formDescription,
+        account: formAccount,
+        value: isReceita ? valNum : -valNum,
+        type: formType
+      };
+
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
+      setIsEditModalOpen(false);
+      setEditingTransaction(null);
+      showToast("Lançamento atualizado com sucesso!");
+
+    } catch (error: any) {
+      showToast("Erro ao atualizar no back-end: " + error.message, "error");
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
+  const handleDeleteTransaction = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este lançamento?")) {
-      setTransactions(transactions.filter(t => t.id !== id));
-      showToast("Lançamento excluído com sucesso!", "info");
+      try {
+        const response = await fetch(`http://localhost:8080/api/transacoes/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro do servidor ao excluir lançamento (Código " + response.status + ")");
+        }
+
+        setTransactions(transactions.filter(t => t.id !== id));
+        showToast("Lançamento excluído com sucesso!", "info");
+      } catch (error: any) {
+        showToast("Erro ao excluir do back-end: " + error.message, "error");
+      }
     }
   };
 

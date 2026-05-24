@@ -167,39 +167,37 @@ function InvestimentosContent() {
     }
   }, [router]);
 
+  // Load investments from back-end
   useEffect(() => {
-    const saved = localStorage.getItem("finseven-transactions");
-    const initialTxs = generateMockTransactions();
-    if (saved) {
+    const fetchInvestments = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        const hasInvestments = sanitized.some((t: any) => t.type === "Investimentos");
-        if (sanitized.length < 10 || !hasInvestments) {
-          setTransactions(initialTxs);
-        } else {
-          setTransactions(sanitized);
+        const response = await fetch("http://localhost:8080/api/investimentos");
+        if (!response.ok) {
+          throw new Error("Erro de rede ao buscar investimentos (Código " + response.status + ")");
         }
-      } catch (e) {
-        setTransactions(initialTxs);
-      }
-    } else {
-      setTransactions(initialTxs);
-    }
-    setIsLoaded(true);
-  }, []);
+        const data = await response.json();
 
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
+        const mappedTransactions: Transaction[] = data.map((item: any) => ({
+          id: String(item.id),
+          date: item.dataAplicacao,
+          category: item.produto,
+          description: "Investimento em " + item.produto,
+          account: item.banco ? item.banco.nome : "Outros",
+          value: item.valorAplicado,
+          type: "Investimentos"
+        }));
+
+        setTransactions(mappedTransactions);
+      } catch (error: any) {
+        showToast("Erro ao carregar investimentos: " + error.message, "error");
+        setTransactions([]);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    fetchInvestments();
+  }, []);
 
   useEffect(() => {
     if (toast) {
@@ -308,7 +306,7 @@ function InvestimentosContent() {
     setIsEditModalOpen(true);
   };
 
-  const handleEditTransaction = (e: React.FormEvent) => {
+  const handleEditTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTransaction) return;
     const valNum = parseFloat(formValue.replace(",", "."));
@@ -316,25 +314,100 @@ function InvestimentosContent() {
       showToast("Por favor, digite um valor válido.", "error");
       return;
     }
-    const updatedTx: Transaction = {
-      ...editingTransaction,
-      date: formDate,
-      category: formCategory,
-      description: formDescription,
-      account: formAccount,
-      value: formType === "Receitas" ? valNum : formType === "Despesas" ? -valNum : valNum,
-      type: formType
-    };
-    setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
-    setIsEditModalOpen(false);
-    setEditingTransaction(null);
-    showToast("Lançamento atualizado com sucesso!");
+
+    try {
+      // 1. Resolve user
+      let resolvedUser: any = null;
+      const loggedUserStr = localStorage.getItem("finseven-logged-user");
+      if (loggedUserStr) {
+        const loggedUser = JSON.parse(loggedUserStr);
+        const usersRes = await fetch("http://localhost:8080/api/usuarios");
+        if (usersRes.ok) {
+          const logins = await usersRes.json();
+          const matchedLogin = logins.find((item: any) => 
+            item.usuario?.email?.toLowerCase() === loggedUser.email?.toLowerCase()
+          );
+          if (matchedLogin) {
+            resolvedUser = matchedLogin.usuario;
+          }
+        }
+      }
+
+      // 2. Resolve bank
+      const bankRes = await fetch("http://localhost:8080/api/bancos");
+      const banks = bankRes.ok ? await bankRes.json() : [];
+      let matchedBank = banks.find((b: any) => b.nome.toLowerCase() === formAccount.toLowerCase());
+      if (!matchedBank) {
+        const createBankRes = await fetch("http://localhost:8080/api/bancos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: formAccount,
+            agencia: "0001",
+            conta: "12345-X",
+            tipo: "Conta Corrente",
+            saldo: 0
+          })
+        });
+        if (createBankRes.ok) matchedBank = await createBankRes.json();
+      }
+
+      // 3. Make PUT request
+      const payload = {
+        produto: formCategory,
+        valorAplicado: valNum,
+        taxaRendimento: 0.08,
+        dataAplicacao: formDate,
+        usuario: resolvedUser,
+        banco: matchedBank
+      };
+
+      const response = await fetch(`http://localhost:8080/api/investimentos/${editingTransaction.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar investimento no servidor (Código " + response.status + ")");
+      }
+
+      const updatedTx: Transaction = {
+        ...editingTransaction,
+        date: formDate,
+        category: formCategory,
+        description: "Investimento em " + formCategory,
+        account: formAccount,
+        value: valNum,
+        type: formType
+      };
+
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
+      setIsEditModalOpen(false);
+      setEditingTransaction(null);
+      showToast("Lançamento atualizado com sucesso!");
+
+    } catch (error: any) {
+      showToast("Erro ao atualizar no back-end: " + error.message, "error");
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
+  const handleDeleteTransaction = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este lançamento?")) {
-      setTransactions(transactions.filter(t => t.id !== id));
-      showToast("Lançamento excluído com sucesso!", "info");
+      try {
+        const response = await fetch(`http://localhost:8080/api/investimentos/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro do servidor ao excluir investimento (Código " + response.status + ")");
+        }
+
+        setTransactions(transactions.filter(t => t.id !== id));
+        showToast("Lançamento excluído com sucesso!", "info");
+      } catch (error: any) {
+        showToast("Erro ao excluir do back-end: " + error.message, "error");
+      }
     }
   };
 

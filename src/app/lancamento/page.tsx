@@ -50,29 +50,8 @@ function LancamentoContent() {
   }, [router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("finseven-transactions");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
-          }
-          return t;
-        });
-        setTransactions(sanitized);
-      } catch (e) {
-      }
-    }
     setIsLoaded(true);
   }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-transactions", JSON.stringify(transactions));
-    }
-  }, [transactions, isLoaded]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
@@ -134,7 +113,7 @@ function LancamentoContent() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const valNum = parseFloat(formValue.replace(",", "."));
     if (isNaN(valNum) || valNum <= 0) {
@@ -148,22 +127,135 @@ function LancamentoContent() {
       ? "Investimento avulso" 
       : "Despesa avulsa";
 
-    const newTx: Transaction = {
-      id: "tx-" + Date.now(),
-      date: formDate,
-      category: formCategory,
-      description: formDescription || defaultDesc,
-      account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
-      type: formType
-    };
+    let bankId: number | null = null;
+    let categoryId: number | null = null;
+    let resolvedBank: any = null;
+    let resolvedUser: any = null;
 
-    setTransactions([newTx, ...transactions]);
-    showToast("Lançamento efetuado com sucesso!", "success");
+    try {
+      // 1. Resolve Bank
+      const bankRes = await fetch("http://localhost:8080/api/bancos");
+      if (!bankRes.ok) throw new Error("Erro de rede ao buscar bancos.");
+      const banks = await bankRes.json();
+      let matchedBank = banks.find((b: any) => b.nome.toLowerCase() === formAccount.toLowerCase());
+      if (!matchedBank) {
+        // Criar banco no back-end
+        const createBankRes = await fetch("http://localhost:8080/api/bancos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: formAccount,
+            agencia: "0001",
+            conta: "12345-X",
+            tipo: "Conta Corrente",
+            saldo: 0
+          })
+        });
+        if (!createBankRes.ok) throw new Error("Erro ao criar banco de contingência.");
+        matchedBank = await createBankRes.json();
+      }
+      bankId = matchedBank.idBanco;
+      resolvedBank = matchedBank;
 
-    setTimeout(() => {
-      router.push("/");
-    }, 1200);
+      // 2. Resolve Category
+      const catRes = await fetch("http://localhost:8080/api/categorias");
+      if (!catRes.ok) throw new Error("Erro de rede ao buscar categorias.");
+      const categories = await catRes.json();
+      let matchedCat = categories.find((c: any) => c.descricao.toLowerCase() === formCategory.toLowerCase());
+      if (!matchedCat) {
+        // Criar categoria no back-end
+        const createCatRes = await fetch("http://localhost:8080/api/categorias", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            descricao: formCategory,
+            tiposTransacao: formType === "Receitas" ? "RECEITA" : "DESPESA"
+          })
+        });
+        if (!createCatRes.ok) throw new Error("Erro ao criar categoria de contingência.");
+        matchedCat = await createCatRes.json();
+      }
+      categoryId = matchedCat.id;
+
+      // 3. Resolve User (for Investments)
+      const loggedUserStr = localStorage.getItem("finseven-logged-user");
+      if (loggedUserStr) {
+        const loggedUser = JSON.parse(loggedUserStr);
+        const usersRes = await fetch("http://localhost:8080/api/usuarios");
+        if (usersRes.ok) {
+          const logins = await usersRes.json();
+          const matchedLogin = logins.find((item: any) => 
+            item.usuario?.email?.toLowerCase() === loggedUser.email?.toLowerCase()
+          );
+          if (matchedLogin) {
+            resolvedUser = matchedLogin.usuario;
+          }
+        }
+      }
+    } catch (e: any) {
+      showToast("Erro de integração ao resolver dados: " + e.message, "error");
+      return;
+    }
+
+    try {
+      if (formType === "Investimentos") {
+        // Post as Investimento
+        const investmentPayload = {
+          produto: formCategory,
+          valorAplicado: valNum,
+          taxaRendimento: 0.08, // default 8%
+          dataAplicacao: formDate,
+          usuario: resolvedUser,
+          banco: resolvedBank
+        };
+
+        const response = await fetch("http://localhost:8080/api/investimentos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(investmentPayload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao salvar investimento (Código " + response.status + ")");
+        }
+      } else {
+        // Post as Transacao (Receita or Despesa)
+        const isReceita = formType === "Receitas";
+        const endpoint = isReceita ? "receitas" : "despesas";
+        
+        const transacaoPayload: any = {
+          idBanco: bankId,
+          idCategoria: categoryId,
+          valor: valNum,
+          data: formDate,
+          descricao: formDescription || defaultDesc
+        };
+
+        if (!isReceita) {
+          // Despesa entity has formapagamento in Java model!
+          transacaoPayload.formaPagamento = "Dinheiro"; // default
+        }
+
+        const response = await fetch(`http://localhost:8080/api/transacoes/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(transacaoPayload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao salvar transação no back-end (Código " + response.status + ")");
+        }
+      }
+
+      showToast("Lançamento efetuado com sucesso!", "success");
+
+      setTimeout(() => {
+        router.push("/");
+      }, 1200);
+
+    } catch (error: any) {
+      showToast("Erro ao persistir lançamento: " + error.message, "error");
+    }
   };
 
   const getThemeColor = () => {

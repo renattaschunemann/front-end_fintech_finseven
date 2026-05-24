@@ -65,47 +65,40 @@ export default function ContaBancariaPage() {
     }
   }, [router]);
 
-  // Load registered bank accounts & theme
+  // Load registered bank accounts & theme from back-end
   useEffect(() => {
-    let savedAccounts = localStorage.getItem("finseven-bank-accounts");
-    const mockUpdated = localStorage.getItem("finseven-mock-updated-may2026-v4");
-    if (!savedAccounts || mockUpdated !== "true") {
-      const initialAccounts: BankAccount[] = [
-        {
-          id: "acc-itau",
-          bankName: "Itaú Unibanco",
-          bankCode: "341",
-          agency: "0123",
-          accountNumber: "98765-4",
-          initialBalance: 12500,
-          accountType: "Conta Corrente"
-        },
-        {
-          id: "acc-bb",
-          bankName: "Banco do Brasil S.A",
-          bankCode: "001",
-          agency: "4321",
-          accountNumber: "12345-6",
-          initialBalance: 8500,
-          accountType: "Conta Salário"
-        }
-      ];
-      localStorage.setItem("finseven-bank-accounts", JSON.stringify(initialAccounts));
-      savedAccounts = JSON.stringify(initialAccounts);
-    }
-
-    if (savedAccounts) {
+    const fetchAccounts = async () => {
       try {
-        setBankAccounts(JSON.parse(savedAccounts));
-      } catch (e) {
+        const response = await fetch("http://localhost:8080/api/bancos");
+        if (!response.ok) {
+          throw new Error("Erro de conexão ao buscar contas bancárias (Código " + response.status + ")");
+        }
+        const data = await response.json();
+        // Mapear dados retornados do Spring Boot
+        const mappedAccounts: BankAccount[] = data.map((b: any) => ({
+          id: String(b.idBanco),
+          bankName: b.nome,
+          bankCode: String(b.idBanco), // fallback, o código é o id no back-end
+          agency: b.agencia,
+          accountNumber: b.conta,
+          initialBalance: b.saldo,
+          accountType: b.tipo
+        }));
+        setBankAccounts(mappedAccounts);
+      } catch (error: any) {
+        showToast("Erro ao carregar contas bancárias: " + error.message, "error");
         setBankAccounts([]);
+      } finally {
+        setIsLoaded(true);
       }
-    }
+    };
+
+    fetchAccounts();
+
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
     if (savedTheme && (savedTheme === "dark" || savedTheme === "light")) {
       setTheme(savedTheme);
     }
-    setIsLoaded(true);
   }, []);
 
   // Sync theme
@@ -121,13 +114,6 @@ export default function ContaBancariaPage() {
       localStorage.setItem("finseven-theme", "dark");
     }
   }, [theme]);
-
-  // Persist accounts
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("finseven-bank-accounts", JSON.stringify(bankAccounts));
-    }
-  }, [bankAccounts, isLoaded]);
 
   // Auto-fill bank code when bank name changes
   useEffect(() => {
@@ -168,7 +154,7 @@ export default function ContaBancariaPage() {
     }).format(val);
   };
 
-  const handleRegisterAccount = (e: React.FormEvent) => {
+  const handleRegisterAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedBankName) {
@@ -193,7 +179,7 @@ export default function ContaBancariaPage() {
     // Check for duplicate account number under the same bank
     const isDuplicate = bankAccounts.some(
       (acc) =>
-        acc.bankCode === bankCode &&
+        acc.bankName === selectedBankName &&
         acc.accountNumber.trim().toLowerCase() === accountNumber.trim().toLowerCase()
     );
 
@@ -202,32 +188,71 @@ export default function ContaBancariaPage() {
       return;
     }
 
-    const newAccount: BankAccount = {
-      id: "acc-" + Date.now(),
-      bankName: selectedBankName,
-      bankCode,
-      agency: agency.trim(),
-      accountNumber: accountNumber.trim(),
-      initialBalance: parsedBalance,
-      accountType,
-    };
+    try {
+      const payload = {
+        nome: selectedBankName,
+        agencia: agency.trim(),
+        conta: accountNumber.trim(),
+        tipo: accountType,
+        saldo: parsedBalance
+      };
 
-    setBankAccounts([newAccount, ...bankAccounts]);
-    showToast("Conta bancária cadastrada com sucesso!", "success");
+      const response = await fetch("http://localhost:8080/api/bancos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    // Reset Form
-    setSelectedBankName("");
-    setBankCode("");
-    setAgency("");
-    setAccountNumber("");
-    setInitialBalance("");
-    setAccountType("Conta Corrente");
+      if (!response.ok) {
+        throw new Error("Falha ao salvar conta bancária no servidor (Erro " + response.status + ")");
+      }
+
+      const savedBanco = await response.json();
+      
+      const newAccount: BankAccount = {
+        id: String(savedBanco.idBanco),
+        bankName: savedBanco.nome,
+        bankCode: String(savedBanco.idBanco),
+        agency: savedBanco.agencia,
+        accountNumber: savedBanco.conta,
+        initialBalance: savedBanco.saldo,
+        accountType: savedBanco.tipo,
+      };
+
+      setBankAccounts([newAccount, ...bankAccounts]);
+      showToast("Conta bancária cadastrada com sucesso!", "success");
+
+      // Reset Form
+      setSelectedBankName("");
+      setBankCode("");
+      setAgency("");
+      setAccountNumber("");
+      setInitialBalance("");
+      setAccountType("Conta Corrente");
+
+    } catch (error: any) {
+      showToast("Erro ao cadastrar conta no back-end: " + error.message, "error");
+    }
   };
 
-  const handleDeleteAccount = (id: string) => {
+  const handleDeleteAccount = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta conta bancária?")) {
-      setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
-      showToast("Conta bancária excluída com sucesso!", "info");
+      try {
+        const response = await fetch(`http://localhost:8080/api/bancos/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro do servidor ao excluir conta (Código " + response.status + ")");
+        }
+
+        setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
+        showToast("Conta bancária excluída com sucesso!", "info");
+      } catch (error: any) {
+        showToast("Erro ao excluir conta do back-end: " + error.message, "error");
+      }
     }
   };
 
