@@ -36,15 +36,21 @@ export default function CategoriasPage() {
   const [selectedType, setSelectedType] = useState<"Receitas" | "Despesas" | "Investimentos">("Receitas");
   const [selectedCategory, setSelectedCategory] = useState("Salário");
 
+  interface CustomCategory {
+    id: number;
+    descricao: string;
+  }
+
   // Custom Category State
   const [customCategories, setCustomCategories] = useState<{
-    Receitas: string[];
-    Despesas: string[];
-    Investimentos: string[];
+    Receitas: CustomCategory[];
+    Despesas: CustomCategory[];
+    Investimentos: CustomCategory[];
   }>({ Receitas: [], Despesas: [], Investimentos: [] });
 
   const [writingCustom, setWritingCustom] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState("");
+  const [categorySearchQuery, setCategorySearchQuery] = useState("");
 
   // Date filter state
   const [dateFilter, setDateFilter] = useState<"30" | "60" | "90" | "all" | "custom">("all");
@@ -78,19 +84,19 @@ export default function CategoriasPage() {
 
         if (catsRes.ok) {
           const catsData = await catsRes.json();
-          const resCats: string[] = [];
-          const despCats: string[] = [];
-          const invCats: string[] = [];
+          const resCats: CustomCategory[] = [];
+          const despCats: CustomCategory[] = [];
+          const invCats: CustomCategory[] = [];
           
           catsData.forEach((cat: any) => {
             const type = cat.tiposTransacao ? cat.tiposTransacao.toUpperCase() : "";
-            const name = cat.descricao;
+            const item = { id: cat.id, descricao: cat.descricao };
             if (type === "RECEITA" || type === "RECEITAS") {
-              resCats.push(name);
+              resCats.push(item);
             } else if (type === "DESPESA" || type === "DESPESAS") {
-              despCats.push(name);
+              despCats.push(item);
             } else {
-              invCats.push(name);
+              invCats.push(item);
             }
           });
           
@@ -168,15 +174,15 @@ export default function CategoriasPage() {
   const availableCategoriesList = useMemo(() => {
     let list: string[] = [];
     if (selectedType === "Receitas") {
-      list = [...DEFAULT_RECEITAS, ...customCategories.Receitas];
+      list = [...DEFAULT_RECEITAS, ...customCategories.Receitas.map(c => c.descricao)];
     } else if (selectedType === "Despesas") {
-      list = [...DEFAULT_DESPESAS, ...customCategories.Despesas];
+      list = [...DEFAULT_DESPESAS, ...customCategories.Despesas.map(c => c.descricao)];
     } else {
       list = [
         ...DEFAULT_INVESTIMENTOS_FIXA,
         ...DEFAULT_INVESTIMENTOS_VARIAVEL,
         ...DEFAULT_INVESTIMENTOS_CRIPTO,
-        ...customCategories.Investimentos,
+        ...customCategories.Investimentos.map(c => c.descricao),
         "Outras fontes de investimento"
       ];
     }
@@ -228,10 +234,11 @@ export default function CategoriasPage() {
       });
 
       if (!res.ok) throw new Error("Erro de servidor.");
+      const savedCat = await res.json();
 
       setCustomCategories((prev) => {
         const updated = { ...prev };
-        updated[selectedType] = [...updated[selectedType], cleanName];
+        updated[selectedType] = [...updated[selectedType], { id: savedCat.id, descricao: savedCat.descricao }];
         return updated;
       });
 
@@ -241,6 +248,44 @@ export default function CategoriasPage() {
       showToast(`Categoria "${cleanName}" cadastrada com sucesso no banco de dados!`, "success");
     } catch (error) {
       showToast("Erro ao cadastrar categoria no servidor.", "error");
+    }
+  };
+
+  // Delete dynamic category
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta categoria personalizada? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
+        method: "DELETE"
+      });
+
+      if (!res.ok) throw new Error("Erro de servidor ao excluir.");
+
+      let catName = "";
+      setCustomCategories((prev) => {
+        const updated = { ...prev };
+        const found = updated[selectedType].find(c => c.id === id);
+        if (found) catName = found.descricao;
+        updated[selectedType] = updated[selectedType].filter(c => c.id !== id);
+        return updated;
+      });
+
+      showToast("Categoria excluída com sucesso!", "success");
+
+      // Reset selection if the deleted category was currently selected
+      if (selectedCategory === catName) {
+        if (selectedType === "Receitas") {
+          setSelectedCategory("Salário");
+        } else if (selectedType === "Despesas") {
+          setSelectedCategory("Saúde");
+        } else {
+          setSelectedCategory("Tesouro Direto");
+        }
+      }
+    } catch (error) {
+      showToast("Erro ao excluir categoria no servidor.", "error");
     }
   };
 
@@ -521,7 +566,7 @@ export default function CategoriasPage() {
                       {customCategories.Investimentos.length > 0 && (
                         <optgroup label="Customizadas">
                           {customCategories.Investimentos.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat.id} value={cat.descricao}>{cat.descricao}</option>
                           ))}
                         </optgroup>
                       )}
@@ -580,6 +625,90 @@ export default function CategoriasPage() {
                     </button>
                   </form>
                 )}
+
+                {/* Manager for Custom Categories */}
+                <div className={`mt-6 pt-5 border-t ${theme === "dark" ? "border-slate-800/60" : "border-slate-200"}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className={`text-xs font-extrabold uppercase tracking-wider ${theme === "dark" ? "text-slate-350" : "text-slate-650"}`}>
+                      Minhas Categorias Customizadas ({selectedType})
+                    </h4>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      theme === "dark" ? "bg-[#070b13] text-slate-400 border border-slate-800" : "bg-slate-100 text-slate-500 border border-slate-200"
+                    }`}>
+                      {customCategories[selectedType].length}
+                    </span>
+                  </div>
+
+                  {/* Search Input for Custom Categories */}
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      placeholder="Pesquisar categoria customizada..."
+                      value={categorySearchQuery}
+                      onChange={(e) => setCategorySearchQuery(e.target.value)}
+                      className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-xs font-semibold transition-all outline-none ${
+                        theme === "dark"
+                          ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-cyan-500 placeholder-slate-600"
+                          : "bg-slate-50 border-slate-200 text-slate-800 focus:border-cyan-500 placeholder-slate-400"
+                      }`}
+                    />
+                    <svg className={`w-4 h-4 absolute left-3 top-3.5 ${theme === "dark" ? "text-slate-600" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+
+                  {/* List of Custom Categories */}
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                    {customCategories[selectedType].length === 0 ? (
+                      <div className={`text-center py-6 text-xs ${theme === "dark" ? "text-slate-550" : "text-slate-450"}`}>
+                        Nenhuma categoria personalizada criada para este fluxo.
+                      </div>
+                    ) : (
+                      (() => {
+                        const filtered = customCategories[selectedType].filter(c =>
+                          c.descricao.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                        );
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className={`text-center py-6 text-xs ${theme === "dark" ? "text-slate-550" : "text-slate-450"}`}>
+                              Nenhuma categoria corresponde à pesquisa.
+                            </div>
+                          );
+                        }
+
+                        return filtered.map((cat) => (
+                          <div
+                            key={cat.id}
+                            className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                              theme === "dark"
+                                ? "bg-[#070b13] border-slate-800/50 hover:bg-[#0c101c]"
+                                : "bg-slate-50/50 border-slate-100 hover:bg-slate-100/50"
+                            }`}
+                          >
+                            <span className={`text-xs font-bold ${theme === "dark" ? "text-slate-300" : "text-slate-700"}`}>
+                              {cat.descricao}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCategory(cat.id)}
+                              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                theme === "dark"
+                                  ? "hover:bg-rose-500/10 border-rose-500/20 hover:border-rose-500/40 text-rose-400"
+                                  : "hover:bg-rose-50 border-rose-200 text-rose-600 hover:text-rose-700"
+                              }`}
+                              title="Excluir categoria"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        ));
+                      })()
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
