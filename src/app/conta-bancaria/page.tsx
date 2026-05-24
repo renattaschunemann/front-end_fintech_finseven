@@ -55,6 +55,7 @@ export default function ContaBancariaPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [initialBalance, setInitialBalance] = useState("");
   const [accountType, setAccountType] = useState<"Conta Corrente" | "Conta Salário" | "Conta Poupança">("Conta Corrente");
+  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
@@ -175,6 +176,7 @@ export default function ContaBancariaPage() {
     // Check for duplicate account number under the same bank
     const isDuplicate = bankAccounts.some(
       (acc) =>
+        acc.id !== (editingAccount?.id ?? "") &&
         acc.bankCode === bankCode &&
         acc.accountNumber.trim().toLowerCase() === accountNumber.trim().toLowerCase()
     );
@@ -193,29 +195,62 @@ export default function ContaBancariaPage() {
         saldo: parsedBalance
       };
 
-      const res = await fetch("http://localhost:8080/api/bancos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      if (editingAccount) {
+        // Edit/PUT flow
+        const res = await fetch(`http://localhost:8080/api/bancos/${editingAccount.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
 
-      if (!res.ok) throw new Error("Falha ao salvar conta bancária.");
+        if (!res.ok) throw new Error("Falha ao atualizar conta bancária.");
 
-      const savedItem = await res.json();
-      const newAccount: BankAccount = {
-        id: String(savedItem.idBanco),
-        bankName: savedItem.nome,
-        bankCode: bankCode,
-        agency: savedItem.agencia || "0000",
-        accountNumber: savedItem.conta,
-        initialBalance: savedItem.saldo,
-        accountType: savedItem.tipo || "Conta Corrente"
-      };
+        const savedItem = await res.json();
+        const updatedAccounts = bankAccounts.map((acc) => 
+          acc.id === editingAccount.id 
+            ? {
+                id: String(savedItem.idBanco),
+                bankName: savedItem.nome,
+                bankCode: bankCode,
+                agency: savedItem.agencia || "0000",
+                accountNumber: savedItem.conta,
+                initialBalance: savedItem.saldo,
+                accountType: savedItem.tipo || "Conta Corrente"
+              }
+            : acc
+        );
 
-      setBankAccounts([newAccount, ...bankAccounts]);
-      showToast("Conta bancária cadastrada com sucesso!", "success");
+        setBankAccounts(updatedAccounts);
+        setEditingAccount(null);
+        showToast("Conta bancária atualizada com sucesso!", "success");
+      } else {
+        // Create/POST flow
+        const res = await fetch("http://localhost:8080/api/bancos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Falha ao salvar conta bancária.");
+
+        const savedItem = await res.json();
+        const newAccount: BankAccount = {
+          id: String(savedItem.idBanco),
+          bankName: savedItem.nome,
+          bankCode: bankCode,
+          agency: savedItem.agencia || "0000",
+          accountNumber: savedItem.conta,
+          initialBalance: savedItem.saldo,
+          accountType: savedItem.tipo || "Conta Corrente"
+        };
+
+        setBankAccounts([newAccount, ...bankAccounts]);
+        showToast("Conta bancária cadastrada com sucesso!", "success");
+      }
 
       // Reset Form
       setSelectedBankName("");
@@ -225,8 +260,28 @@ export default function ContaBancariaPage() {
       setInitialBalance("");
       setAccountType("Conta Corrente");
     } catch (error: any) {
-      showToast("Erro ao salvar conta bancária no servidor: " + error.message, "error");
+      showToast("Erro ao processar conta bancária no servidor: " + error.message, "error");
     }
+  };
+
+  const handleEditClick = (account: BankAccount) => {
+    setEditingAccount(account);
+    setSelectedBankName(account.bankName);
+    setAgency(account.agency);
+    setAccountNumber(account.accountNumber);
+    setInitialBalance(String(account.initialBalance));
+    setAccountType(account.accountType);
+    showToast(`Editando conta do banco ${account.bankName}`, "info");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAccount(null);
+    setSelectedBankName("");
+    setBankCode("");
+    setAgency("");
+    setAccountNumber("");
+    setInitialBalance("");
+    setAccountType("Conta Corrente");
   };
 
   const handleDeleteAccount = async (id: string) => {
@@ -474,13 +529,23 @@ export default function ContaBancariaPage() {
               theme === "dark" ? "bg-[#101422]/70 border-slate-800/40 shadow-2xl shadow-black/30" : "bg-white border-slate-200 shadow-sm"
             }`}>
               <div className="flex items-center gap-2 mb-6 pb-3 border-b border-slate-850/50">
-                <div className={`p-1.5 rounded-lg ${theme === "dark" ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-600"}`}>
-                  <svg className="w-5 h-5 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className={`p-1.5 rounded-lg ${
+                  editingAccount 
+                    ? theme === "dark" ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+                    : theme === "dark" ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-600"
+                }`}>
+                  {editingAccount ? (
+                    <svg className="w-5 h-5 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 stroke-[2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
                 </div>
                 <h3 className={`text-base font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
-                  Cadastrar Nova Conta
+                  {editingAccount ? `Editar Conta: ${editingAccount.bankName}` : "Cadastrar Nova Conta"}
                 </h3>
               </div>
 
@@ -661,13 +726,33 @@ export default function ContaBancariaPage() {
                   </div>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-all shadow-md shadow-blue-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer mt-4"
-                >
-                  Cadastrar Conta
-                </button>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  <button
+                    type="submit"
+                    className={`flex-1 font-bold py-3.5 px-4 rounded-xl text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
+                      editingAccount
+                        ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-500/10"
+                        : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20"
+                    }`}
+                  >
+                    {editingAccount ? "Salvar Alterações" : "Cadastrar Conta"}
+                  </button>
+                  
+                  {editingAccount && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className={`px-4 py-3.5 rounded-xl text-sm font-bold border transition-all cursor-pointer ${
+                        theme === "dark"
+                          ? "bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
 
@@ -752,19 +837,37 @@ export default function ContaBancariaPage() {
                             </span>
                           </div>
 
-                          <button
-                            onClick={() => handleDeleteAccount(account.id)}
-                            className={`p-2 rounded-xl transition-all cursor-pointer border ${
-                              theme === "dark"
-                                ? "bg-slate-900/60 border-slate-800/50 hover:bg-rose-950/20 text-slate-500 hover:text-rose-400 hover:border-rose-500/20"
-                                : "bg-white border-slate-200 hover:bg-rose-50 text-slate-450 hover:text-rose-600 hover:border-rose-200"
-                            }`}
-                            title="Remover conta"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditClick(account)}
+                              className={`p-2 rounded-xl transition-all cursor-pointer border ${
+                                theme === "dark"
+                                  ? "bg-slate-900/60 border-slate-800/50 hover:bg-amber-950/20 text-slate-500 hover:text-amber-400 hover:border-amber-500/20"
+                                  : "bg-white border-slate-200 hover:bg-amber-50 text-slate-450 hover:text-amber-600 hover:border-amber-200"
+                              }`}
+                              title="Editar conta"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAccount(account.id)}
+                              className={`p-2 rounded-xl transition-all cursor-pointer border ${
+                                theme === "dark"
+                                  ? "bg-slate-900/60 border-slate-800/50 hover:bg-rose-950/20 text-slate-500 hover:text-rose-400 hover:border-rose-500/20"
+                                  : "bg-white border-slate-200 hover:bg-rose-50 text-slate-450 hover:text-rose-600 hover:border-rose-200"
+                              }`}
+                              title="Remover conta"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
