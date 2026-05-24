@@ -422,18 +422,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        {/* Demo Tip Card */}
-        {activeTab === "login" && (
-          <div className={`p-4 rounded-2xl border text-center transition-all ${
-            theme === "dark" ? "bg-slate-900/40 border-slate-800/30 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
-          }`}>
-            <span className="text-[10px] font-bold uppercase block mb-1 text-cyan-400">Dica de Acesso Rápido</span>
-            <p className="text-xs font-semibold leading-relaxed">
-              E-mail de teste: <span className="font-mono text-blue-400 select-all">admin@finseven.com</span> &bull; Senha: <span className="font-mono text-blue-400 select-all">admin123</span>
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
