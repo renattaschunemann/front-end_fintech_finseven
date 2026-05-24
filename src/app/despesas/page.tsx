@@ -19,7 +19,7 @@ function DespesasContent() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeMenu, setActiveMenu] = useState("Despesas");
 
-  const [activeFilter, setActiveFilter] = useState<"30" | "69" | "90" | "custom" | "all">("all");
+  const [activeFilter, setActiveFilter] = useState<"30" | "60" | "90" | "custom" | "all">("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -123,9 +123,9 @@ function DespesasContent() {
         limit.setDate(limit.getDate() - 30);
         return txDate >= limit && txDate <= today;
       }
-      if (activeFilter === "69") {
+      if (activeFilter === "60") {
         const limit = new Date(today);
-        limit.setDate(limit.getDate() - 69);
+        limit.setDate(limit.getDate() - 60);
         return txDate >= limit && txDate <= today;
       }
       if (activeFilter === "90") {
@@ -319,7 +319,7 @@ function DespesasContent() {
                 {[
                   { id: "all", label: "Todos" },
                   { id: "30", label: "Últimos 30 Dias" },
-                  { id: "69", label: "Últimos 69 Dias" },
+                  { id: "60", label: "Últimos 60 Dias" },
                   { id: "90", label: "Últimos 90 Dias" }
                 ].map(f => (
                   <button
