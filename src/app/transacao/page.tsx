@@ -22,6 +22,7 @@ function TransacaoContent() {
   const [formCategory, setFormCategory] = useState("Supermercado");
   const [formDescription, setFormDescription] = useState("");
   const [formAccount, setFormAccount] = useState("Itaú");
+  const [bankOptions, setBankOptions] = useState<string[]>(["Itaú", "Banco do Brasil", "Outros"]);
   const [formValue, setFormValue] = useState("");
   const [formDate, setFormDate] = useState("2026-05-23");
 
@@ -57,6 +58,32 @@ function TransacaoContent() {
       }
     } catch (e) {}
   }, [router]);
+
+  useEffect(() => {
+    const loadBanks = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/bancos");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const names = data.map((b: any) => b.nome);
+            const uniqueNames = Array.from(new Set(names)) as string[];
+            if (!uniqueNames.includes("Outros")) {
+              uniqueNames.push("Outros");
+            }
+            setBankOptions(uniqueNames);
+            if (uniqueNames.length > 0) {
+              setFormAccount(uniqueNames[0]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar bancos:", error);
+      }
+    };
+
+    loadBanks();
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("finseven-transactions");
@@ -400,7 +427,7 @@ function TransacaoContent() {
                         : "bg-slate-50 border-slate-200 text-slate-800"
                     }`}
                   >
-                    {["Itaú", "Banco do Brasil", "Outros"].map(acc => (
+                    {bankOptions.map(acc => (
                       <option key={acc} value={acc}>{acc}</option>
                     ))}
                   </select>

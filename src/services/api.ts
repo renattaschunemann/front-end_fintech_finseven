@@ -10,6 +10,24 @@ export const getBancoId = (accountName: string): number => {
   return 3; // Default Outros
 };
 
+// Dynamically resolve bank ID from name
+export const resolveBancoId = async (accountName: string): Promise<number> => {
+  try {
+    const res = await fetch(`${BASE_URL}/bancos`);
+    if (res.ok) {
+      const data = await res.json();
+      const matched = data.find((b: any) => b.nome.toLowerCase() === accountName.toLowerCase() || b.nome.toLowerCase().includes(accountName.toLowerCase()) || accountName.toLowerCase().includes(b.nome.toLowerCase()));
+      if (matched) {
+        return matched.idBanco;
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao resolver ID do banco:", e);
+  }
+  // Fallback to static mapping
+  return getBancoId(accountName);
+};
+
 export const getAccountNameFromId = (id: number): string => {
   if (id === 1) return "Itaú";
   if (id === 2) return "Banco do Brasil";
@@ -122,7 +140,7 @@ const mapBackendInvestimentoToFrontend = (item: any): Transaction => {
     date: item.dataAplicacao,
     category: category,
     description: description,
-    account: item.banco ? getAccountNameFromId(item.banco.idBanco) : "Outros",
+    account: item.banco ? item.banco.nome : "Outros",
     value: Math.abs(item.valorAplicado),
     type: "Investimentos",
   };
@@ -131,16 +149,38 @@ const mapBackendInvestimentoToFrontend = (item: any): Transaction => {
 // Fetch all transactions and investments from API
 export const fetchTransactions = async (): Promise<Transaction[]> => {
   try {
-    const [txResponse, invResponse] = await Promise.all([
+    const [txResponse, invResponse, bancosResponse] = await Promise.all([
       fetch(`${BASE_URL}/transacoes`),
       fetch(`${BASE_URL}/investimentos`),
+      fetch(`${BASE_URL}/bancos`),
     ]);
+
+    let bancosList: any[] = [];
+    if (bancosResponse.ok) {
+      bancosList = await bancosResponse.json();
+    }
+
+    const getBankName = (id: number): string => {
+      const found = bancosList.find((b: any) => b.idBanco === id);
+      return found ? found.nome : getAccountNameFromId(id);
+    };
 
     let frontendTxs: Transaction[] = [];
 
     if (txResponse.ok) {
       const dbTxs = await txResponse.json();
-      frontendTxs = frontendTxs.concat(dbTxs.map(mapBackendTransacaoToFrontend));
+      frontendTxs = frontendTxs.concat(dbTxs.map((item: any) => {
+        const isReceita = item.tipo === "RECEITA";
+        return {
+          id: `tx-api-${item.id}`,
+          date: item.data,
+          category: getCategoryNameFromId(item.idCategoria),
+          description: item.descricao || "",
+          account: getBankName(item.idBanco),
+          value: isReceita ? Math.abs(item.valor) : -Math.abs(item.valor),
+          type: isReceita ? "Receitas" : "Despesas",
+        };
+      }));
     }
 
     if (invResponse.ok) {
@@ -158,6 +198,8 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
 // Create a new transaction (Receita, Despesa or Investimento)
 export const createTransaction = async (tx: Omit<Transaction, "id">, userId: number): Promise<Transaction> => {
   try {
+    const resolvedBancoId = await resolveBancoId(tx.account);
+
     if (tx.type === "Investimentos") {
       const payload = {
         produto: `${tx.category} - ${tx.description}`,
@@ -165,7 +207,7 @@ export const createTransaction = async (tx: Omit<Transaction, "id">, userId: num
         taxaRendimento: 1.0,
         dataAplicacao: tx.date,
         banco: {
-          idBanco: getBancoId(tx.account),
+          idBanco: resolvedBancoId,
         },
         usuario: {
           id: userId,
@@ -185,9 +227,9 @@ export const createTransaction = async (tx: Omit<Transaction, "id">, userId: num
       const isReceita = tx.type === "Receitas";
       const endpoint = isReceita ? "receitas" : "despesas";
       const payload: any = {
-        idBanco: getBancoId(tx.account),
+        idBanco: resolvedBancoId,
         idCategoria: getCategoriaId(tx.category),
-        valor: Math.abs(tx.value), // backend will handle signed representation or type
+        valor: Math.abs(tx.value),
         data: tx.date,
         descricao: tx.description,
       };
@@ -218,6 +260,7 @@ export const createTransaction = async (tx: Omit<Transaction, "id">, userId: num
 export const updateTransaction = async (tx: Transaction, userId: number): Promise<Transaction> => {
   try {
     const rawId = tx.id.replace("tx-api-", "").replace("inv-api-", "");
+    const resolvedBancoId = await resolveBancoId(tx.account);
     
     if (tx.type === "Investimentos") {
       const payload = {
@@ -227,7 +270,7 @@ export const updateTransaction = async (tx: Transaction, userId: number): Promis
         taxaRendimento: 1.0,
         dataAplicacao: tx.date,
         banco: {
-          idBanco: getBancoId(tx.account),
+          idBanco: resolvedBancoId,
         },
         usuario: {
           id: userId,
@@ -248,7 +291,7 @@ export const updateTransaction = async (tx: Transaction, userId: number): Promis
       const endpoint = isReceita ? "receitas" : "despesas";
       const payload: any = {
         id: Number(rawId),
-        idBanco: getBancoId(tx.account),
+        idBanco: resolvedBancoId,
         idCategoria: getCategoriaId(tx.category),
         valor: Math.abs(tx.value),
         data: tx.date,
