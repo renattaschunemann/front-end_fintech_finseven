@@ -48,7 +48,7 @@ export default function ContaBancariaPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeMenu, setActiveMenu] = useState("Conta Bancária");
 
-  // Form State
+  
   const [selectedBankName, setSelectedBankName] = useState("");
   const [bankCode, setBankCode] = useState("");
   const [agency, setAgency] = useState("");
@@ -66,7 +66,7 @@ export default function ContaBancariaPage() {
     }
   }, [router]);
 
-  // Load registered bank accounts & theme
+  
   useEffect(() => {
     const loadAPI = async () => {
       try {
@@ -98,7 +98,7 @@ export default function ContaBancariaPage() {
     }
   }, []);
 
-  // Sync theme
+  
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === "light") {
@@ -112,7 +112,7 @@ export default function ContaBancariaPage() {
     }
   }, [theme]);
 
-  // Auto-fill bank code when bank name changes
+  
   useEffect(() => {
     const matched = BANKS.find((b) => b.name === selectedBankName);
     if (matched) {
@@ -122,7 +122,7 @@ export default function ContaBancariaPage() {
     }
   }, [selectedBankName]);
 
-  // Toast Auto-dismiss
+  
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => {
@@ -173,7 +173,7 @@ export default function ContaBancariaPage() {
       return;
     }
 
-    // Check for duplicate account number under the same bank
+    
     const isDuplicate = bankAccounts.some(
       (acc) =>
         acc.id !== (editingAccount?.id ?? "") &&
@@ -196,7 +196,7 @@ export default function ContaBancariaPage() {
       };
 
       if (editingAccount) {
-        // Edit/PUT flow
+        
         const res = await fetch(`http://localhost:8080/api/bancos/${editingAccount.id}`, {
           method: "PUT",
           headers: {
@@ -226,7 +226,7 @@ export default function ContaBancariaPage() {
         setEditingAccount(null);
         showToast("Conta bancária atualizada com sucesso!", "success");
       } else {
-        // Create/POST flow
+        
         const res = await fetch("http://localhost:8080/api/bancos", {
           method: "POST",
           headers: {
@@ -252,7 +252,7 @@ export default function ContaBancariaPage() {
         showToast("Conta bancária cadastrada com sucesso!", "success");
       }
 
-      // Reset Form
+      
       setSelectedBankName("");
       setBankCode("");
       setAgency("");
@@ -301,69 +301,69 @@ export default function ContaBancariaPage() {
     }
   };
 
-  // Compute stats
+  
   const totalBalance = useMemo(() => {
     return bankAccounts.reduce((sum, acc) => sum + acc.initialBalance, 0);
   }, [bankAccounts]);
 
   const bankBrandStyles = (code: string) => {
     switch (code) {
-      case "260": // Nubank
+      case "260": 
         return {
           bg: "bg-purple-600/10 border-purple-500/20 text-purple-400",
           iconColor: "text-purple-400",
           glow: "shadow-[0_0_15px_rgba(168,85,247,0.15)]",
         };
-      case "341": // Itaú
+      case "341": 
         return {
           bg: "bg-orange-600/10 border-orange-500/20 text-orange-400",
           iconColor: "text-orange-400",
           glow: "shadow-[0_0_15px_rgba(249,115,22,0.15)]",
         };
-      case "237": // Bradesco
-      case "033": // Santander
+      case "237": 
+      case "033": 
         return {
           bg: "bg-rose-600/10 border-rose-500/20 text-rose-400",
           iconColor: "text-rose-400",
           glow: "shadow-[0_0_15px_rgba(244,63,94,0.15)]",
         };
-      case "104": // Caixa
+      case "104": 
         return {
           bg: "bg-blue-600/10 border-blue-500/20 text-blue-400",
           iconColor: "text-blue-400",
           glow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
         };
-      case "001": // Banco do Brasil
+      case "001": 
         return {
           bg: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400",
           iconColor: "text-yellow-400",
           glow: "shadow-[0_0_15px_rgba(234,179,8,0.15)]",
         };
-      case "336": // C6 Bank
+      case "336": 
         return {
           bg: "bg-slate-700/15 border-slate-650/20 text-slate-300",
           iconColor: "text-slate-300",
           glow: "shadow-[0_0_15px_rgba(148,163,184,0.1)]",
         };
-      case "077": // Inter
+      case "077": 
         return {
           bg: "bg-orange-500/15 border-orange-400/20 text-orange-450",
           iconColor: "text-orange-450",
           glow: "shadow-[0_0_15px_rgba(249,115,22,0.1)]",
         };
-      case "208": // BTG
+      case "208": 
         return {
           bg: "bg-indigo-900/20 border-indigo-700/20 text-indigo-400",
           iconColor: "text-indigo-400",
           glow: "shadow-[0_0_15px_rgba(99,102,241,0.1)]",
         };
-      case "212": // Original
+      case "212": 
         return {
           bg: "bg-emerald-600/10 border-emerald-500/20 text-emerald-400",
           iconColor: "text-emerald-400",
           glow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
         };
-      case "121": // Agibank
+      case "121": 
         return {
           bg: "bg-sky-500/10 border-sky-400/20 text-sky-400",
           iconColor: "text-sky-400",
@@ -459,7 +459,7 @@ export default function ContaBancariaPage() {
             </button>
           </div>
 
-          {/* Stats Row */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className={`backdrop-blur-md border rounded-2xl p-5 shadow-sm transition-all ${
               theme === "dark" ? "bg-[#101422]/70 border-slate-800/40" : "bg-white border-slate-200"
@@ -522,9 +522,9 @@ export default function ContaBancariaPage() {
             </div>
           </div>
 
-          {/* Form & List Grid */}
+          {}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Side: Form */}
+            {}
             <div className={`lg:col-span-5 backdrop-blur-md border rounded-2xl p-6 shadow-md transition-all ${
               theme === "dark" ? "bg-[#101422]/70 border-slate-800/40 shadow-2xl shadow-black/30" : "bg-white border-slate-200 shadow-sm"
             }`}>
@@ -550,7 +550,7 @@ export default function ContaBancariaPage() {
               </div>
 
               <form onSubmit={handleRegisterAccount} className="space-y-4">
-                {/* Bank Name Select */}
+                {}
                 <div>
                   <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -577,7 +577,7 @@ export default function ContaBancariaPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Bank Code (Read Only) */}
+                  {}
                   <div>
                     <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                       theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -597,7 +597,7 @@ export default function ContaBancariaPage() {
                     />
                   </div>
 
-                  {/* Agency */}
+                  {}
                   <div>
                     <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                       theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -620,7 +620,7 @@ export default function ContaBancariaPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Account Number */}
+                  {}
                   <div>
                     <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                       theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -641,7 +641,7 @@ export default function ContaBancariaPage() {
                     />
                   </div>
 
-                  {/* Initial Balance */}
+                  {}
                   <div>
                     <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                       theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -665,7 +665,7 @@ export default function ContaBancariaPage() {
                   </div>
                 </div>
 
-                {/* Account Type Grid Selection */}
+                {}
                 <div>
                   <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
@@ -726,7 +726,7 @@ export default function ContaBancariaPage() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {}
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button
                     type="submit"
@@ -756,7 +756,7 @@ export default function ContaBancariaPage() {
               </form>
             </div>
 
-            {/* Right Side: List of Registered Accounts */}
+            {}
             <div className={`lg:col-span-7 backdrop-blur-md border rounded-2xl p-6 shadow-md transition-all ${
               theme === "dark" ? "bg-[#101422]/70 border-slate-800/40" : "bg-white border-slate-200 shadow-sm"
             }`}>
@@ -799,7 +799,7 @@ export default function ContaBancariaPage() {
                         }`}
                       >
                         <div className="flex items-center gap-4">
-                          {/* Bank Visual Badge */}
+                          {}
                           <div className={`h-11 w-11 rounded-2xl flex items-center justify-center text-xs font-bold border transition-all ${brand.bg}`}>
                             {account.bankCode}
                           </div>
@@ -813,7 +813,7 @@ export default function ContaBancariaPage() {
                               <span className="h-1 w-1 bg-slate-700 rounded-full" />
                               <span>Conta: <strong className={theme === "dark" ? "text-slate-350" : "text-slate-700"}>{account.accountNumber}</strong></span>
                               <span className="h-1 w-1 bg-slate-700 rounded-full" />
-                              {/* Account Type Badge */}
+                              {}
                               <span className={`inline-block px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded ${
                                 account.accountType === "Conta Corrente"
                                   ? theme === "dark" ? "bg-blue-950/40 text-blue-400 border border-blue-800/35" : "bg-blue-50 text-blue-600 border border-blue-200"
@@ -879,7 +879,7 @@ export default function ContaBancariaPage() {
         </div>
       </main>
 
-      {/* Theme Switcher Float Action */}
+      {}
       <button 
         onClick={toggleTheme}
         className={`fixed bottom-6 right-6 z-30 h-12 w-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group ${

@@ -2,7 +2,6 @@ import { Transaction } from "@/interfaces";
 
 const BASE_URL = "http://localhost:8080/api";
 
-// Helpers to map banks/accounts to IDs
 export const getBancoId = (accountName: string): number => {
   const acc = accountName.toLowerCase();
   if (acc.includes("itau") || acc.includes("itaú")) return 1;
@@ -10,7 +9,6 @@ export const getBancoId = (accountName: string): number => {
   return 3; // Default Outros
 };
 
-// Dynamically resolve bank ID from name
 export const resolveBancoId = async (accountName: string): Promise<number> => {
   try {
     const res = await fetch(`${BASE_URL}/bancos`);
@@ -24,7 +22,7 @@ export const resolveBancoId = async (accountName: string): Promise<number> => {
   } catch (e) {
     console.error("Erro ao resolver ID do banco:", e);
   }
-  // Fallback to static mapping
+
   return getBancoId(accountName);
 };
 
@@ -34,7 +32,7 @@ export const getAccountNameFromId = (id: number): string => {
   return "Outros";
 };
 
-// Helpers to map categories to IDs
+
 export const getCategoriaId = (category: string): number => {
   const mapping: Record<string, number> = {
     // Receitas
@@ -72,7 +70,7 @@ export const getCategoriaId = (category: string): number => {
     "Solana": 41,
     "Stablecoins": 42,
   };
-  return mapping[category] || 99; // 99 for Outros
+  return mapping[category] || 99;
 };
 
 export const getCategoryNameFromId = (id: number): string => {
@@ -111,7 +109,7 @@ export const getCategoryNameFromId = (id: number): string => {
   return revMapping[id] || "Outros";
 };
 
-// Map backend structures to frontend Transaction interface
+
 const mapBackendTransacaoToFrontend = (item: any): Transaction => {
   const isReceita = item.tipo === "RECEITA";
   return {
@@ -146,7 +144,7 @@ const mapBackendInvestimentoToFrontend = (item: any): Transaction => {
   };
 };
 
-// Fetch all transactions and investments from API
+
 export const fetchTransactions = async (): Promise<Transaction[]> => {
   try {
     const [txResponse, invResponse, bancosResponse] = await Promise.all([
@@ -195,7 +193,7 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
   }
 };
 
-// Create a new transaction (Receita, Despesa or Investimento)
+
 export const createTransaction = async (tx: Omit<Transaction, "id">, userId: number): Promise<Transaction> => {
   try {
     const resolvedBancoId = await resolveBancoId(tx.account);
@@ -256,12 +254,12 @@ export const createTransaction = async (tx: Omit<Transaction, "id">, userId: num
   }
 };
 
-// Update an existing transaction
+
 export const updateTransaction = async (tx: Transaction, userId: number): Promise<Transaction> => {
   try {
     const rawId = tx.id.replace("tx-api-", "").replace("inv-api-", "");
     const resolvedBancoId = await resolveBancoId(tx.account);
-    
+
     if (tx.type === "Investimentos") {
       const payload = {
         id: Number(rawId),
@@ -320,7 +318,7 @@ export const updateTransaction = async (tx: Transaction, userId: number): Promis
   }
 };
 
-// Delete an existing transaction
+
 export const deleteTransaction = async (txId: string, type: "Receitas" | "Despesas" | "Investimentos"): Promise<void> => {
   try {
     const rawId = txId.replace("tx-api-", "").replace("inv-api-", "");
