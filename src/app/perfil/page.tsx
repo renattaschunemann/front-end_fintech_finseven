@@ -410,7 +410,7 @@ function PerfilContent() {
                 <hr className={`border-dashed my-6 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`} />
 
                 <h4 className={`text-xs font-bold uppercase tracking-wider mb-3 ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
-                  Alterar Senha de Acesso (Opcional)
+                  Alterar Senha de Acesso
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
