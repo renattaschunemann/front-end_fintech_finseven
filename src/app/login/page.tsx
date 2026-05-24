@@ -8,7 +8,6 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Form States
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
@@ -17,7 +16,7 @@ export default function LoginPage() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
-  // Sync and load theme
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
     if (savedTheme && (savedTheme === "dark" || savedTheme === "light")) {
@@ -36,7 +35,6 @@ export default function LoginPage() {
     }
   }, [theme]);
 
-  // Toast Auto-Dismiss
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => {
@@ -50,7 +48,7 @@ export default function LoginPage() {
     setToast({ message, type });
   };
 
-  // CPF masking logic
+
   const handleCpfChange = (val: string) => {
     const numbersOnly = val.replace(/\D/g, "");
     let formatted = numbersOnly;
@@ -68,10 +66,10 @@ export default function LoginPage() {
     setCpf(formatted);
   };
 
-  // Switch between tabs
+
   const handleTabChange = (tab: "login" | "register") => {
     setActiveTab(tab);
-    // Reset fields
+
     setNome("");
     setCpf("");
     setEmail("");
@@ -79,7 +77,6 @@ export default function LoginPage() {
     setConfirmPassword("");
   };
 
-  // Submit handlers
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,7 +114,6 @@ export default function LoginPage() {
           return;
         }
 
-        // 1. Verificar se o e-mail já está cadastrado para evitar duplicidade
         const checkRes = await fetch(`http://localhost:8080/api/usuarios/email/${encodeURIComponent(email.trim())}`);
         if (checkRes.ok) {
           showToast("Este E-mail já está cadastrado no sistema.", "error");
@@ -149,7 +145,6 @@ export default function LoginPage() {
 
         const savedLogin = await response.json();
 
-        // Autentica a sessão ativa no localStorage conforme esperado pelas telas de Header e Sidebar
         localStorage.setItem("finseven-logged-user", JSON.stringify({
           id: savedLogin.usuario.id,
           name: savedLogin.usuario.nome,
@@ -166,13 +161,12 @@ export default function LoginPage() {
         showToast(error.message || "Erro de conexão com o back-end.", "error");
       }
     } else {
-      // Login flow usando o e-mail
+
       if (!email.includes("@")) {
         showToast("Por favor, preencha um e-mail válido.", "error");
         return;
       }
 
-      // Caso padrão do Admin em caso de testes rápidos sem banco
       if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
         const defaultAdmin = {
           id: 1,
@@ -181,7 +175,7 @@ export default function LoginPage() {
           email: "admin@finseven.com"
         };
         localStorage.setItem("finseven-logged-user", JSON.stringify(defaultAdmin));
-        
+
         showToast("Login administrativo realizado com sucesso!", "success");
         setTimeout(() => {
           router.push("/");
@@ -212,7 +206,6 @@ export default function LoginPage() {
 
         const matchedLogin = await response.json();
 
-        // Autentica a sessão do usuário
         localStorage.setItem("finseven-logged-user", JSON.stringify({
           id: matchedLogin.usuario.id,
           name: matchedLogin.usuario.nome,
@@ -232,25 +225,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className={`min-h-screen w-screen flex flex-col justify-center items-center p-4 transition-colors duration-500 overflow-hidden font-sans relative ${
-      theme === "dark" ? "bg-[#0b0f19] text-slate-100" : "bg-[#f8fafc] text-slate-800"
-    }`}>
+    <div className={`min-h-screen w-screen flex flex-col justify-center items-center p-4 transition-colors duration-500 overflow-hidden font-sans relative ${theme === "dark" ? "bg-[#0b0f19] text-slate-100" : "bg-[#f8fafc] text-slate-800"
+      }`}>
       {/* Dynamic Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
 
       {/* Toast Alert */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-300 shadow-lg animate-bounce ${
-          toast.type === "success"
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-300 shadow-lg animate-bounce ${toast.type === "success"
             ? "bg-emerald-950/95 border-emerald-500/35 text-emerald-300"
             : toast.type === "info"
-            ? "bg-blue-950/95 border-blue-500/35 text-blue-300"
-            : "bg-rose-950/95 border-rose-500/35 text-rose-300"
-        }`}>
-          <div className={`h-2 w-2 rounded-full ${
-            toast.type === "success" ? "bg-emerald-400" : toast.type === "info" ? "bg-blue-400" : "bg-rose-400"
-          }`} />
+              ? "bg-blue-950/95 border-blue-500/35 text-blue-300"
+              : "bg-rose-950/95 border-rose-500/35 text-rose-300"
+          }`}>
+          <div className={`h-2 w-2 rounded-full ${toast.type === "success" ? "bg-emerald-400" : toast.type === "info" ? "bg-blue-400" : "bg-rose-400"
+            }`} />
           {toast.message}
         </div>
       )}
@@ -272,34 +262,30 @@ export default function LoginPage() {
         </div>
 
         {/* Auth Glassmorphic Card */}
-        <div className={`backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-300 ${
-          theme === "dark" ? "bg-[#101422]/65 border-slate-800/40 shadow-black/45" : "bg-white/80 border-slate-200 shadow-slate-200/50"
-        }`}>
-          {/* Tab Selector */}
-          <div className={`grid grid-cols-2 p-1 rounded-2xl mb-6 ${
-            theme === "dark" ? "bg-[#070b13]/60" : "bg-slate-100"
+        <div className={`backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-300 ${theme === "dark" ? "bg-[#101422]/65 border-slate-800/40 shadow-black/45" : "bg-white/80 border-slate-200 shadow-slate-200/50"
           }`}>
+          {/* Tab Selector */}
+          <div className={`grid grid-cols-2 p-1 rounded-2xl mb-6 ${theme === "dark" ? "bg-[#070b13]/60" : "bg-slate-100"
+            }`}>
             <button
               onClick={() => handleTabChange("login")}
-              className={`py-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "login"
+              className={`py-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === "login"
                   ? theme === "dark"
                     ? "bg-blue-600/15 border border-blue-500/20 text-blue-400 shadow-md"
                     : "bg-white border border-slate-200 text-blue-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-400"
-              }`}
+                }`}
             >
               Entrar
             </button>
             <button
               onClick={() => handleTabChange("register")}
-              className={`py-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "register"
+              className={`py-3.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === "register"
                   ? theme === "dark"
                     ? "bg-blue-600/15 border border-blue-500/20 text-blue-400 shadow-md"
                     : "bg-white border border-slate-200 text-blue-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-400"
-              }`}
+                }`}
             >
               Novo Cadastro
             </button>
@@ -309,9 +295,8 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {activeTab === "register" && (
               <div>
-                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                  theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  }`}>
                   Nome Completo
                 </label>
                 <input
@@ -320,20 +305,18 @@ export default function LoginPage() {
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Seu nome"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                    theme === "dark"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${theme === "dark"
                       ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                       : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                  }`}
+                    }`}
                 />
               </div>
             )}
 
             {activeTab === "register" && (
               <div>
-                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                  theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  }`}>
                   CPF
                 </label>
                 <input
@@ -343,19 +326,17 @@ export default function LoginPage() {
                   onChange={(e) => handleCpfChange(e.target.value)}
                   placeholder="000.000.000-00"
                   maxLength={14}
-                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                    theme === "dark"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${theme === "dark"
                       ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                       : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                  }`}
+                    }`}
                 />
               </div>
             )}
 
             <div>
-              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                theme === "dark" ? "text-slate-400" : "text-slate-500"
-              }`}>
+              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-500"
+                }`}>
                 E-mail
               </label>
               <input
@@ -364,18 +345,16 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seuemail@exemplo.com"
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                  theme === "dark"
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${theme === "dark"
                     ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                     : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                }`}
+                  }`}
               />
             </div>
 
             <div>
-              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                theme === "dark" ? "text-slate-400" : "text-slate-500"
-              }`}>
+              <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-500"
+                }`}>
                 Senha
               </label>
               <input
@@ -384,19 +363,17 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••"
-                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                  theme === "dark"
+                className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${theme === "dark"
                     ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                     : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                }`}
+                  }`}
               />
             </div>
 
             {activeTab === "register" && (
               <div>
-                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${
-                  theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>
+                <label className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-500"
+                  }`}>
                   Confirmar Senha
                 </label>
                 <input
@@ -405,11 +382,10 @@ export default function LoginPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${
-                    theme === "dark"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold transition-all outline-none ${theme === "dark"
                       ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                       : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
-                  }`}
+                    }`}
                 />
               </div>
             )}

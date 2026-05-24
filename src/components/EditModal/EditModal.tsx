@@ -38,6 +38,9 @@ export default function EditModal({
     }
   }, [formCategory]);
 
+  const parsedValue = parseFloat(formValue?.toString().replace(",", "."));
+  const isInvalidValue = formValue !== "" && (isNaN(parsedValue) || parsedValue <= 0);
+
   if (!isOpen) return null;
 
   return (
@@ -108,12 +111,19 @@ export default function EditModal({
                 placeholder="0.00"
                 value={formValue}
                 onChange={(e) => setFormValue(e.target.value)}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-xs font-bold transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                  theme === "dark" 
-                    ? "bg-[#070b13] border-slate-800/80 text-slate-200 placeholder-slate-600" 
-                    : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400"
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-xs font-bold transition-colors focus:outline-none focus:ring-1 ${
+                  isInvalidValue
+                    ? "bg-rose-950/20 border-rose-500/60 text-rose-400 focus:ring-rose-500 focus:border-rose-500 placeholder-rose-700/50"
+                    : theme === "dark"
+                      ? "bg-[#070b13] border-slate-800/80 text-slate-200 placeholder-slate-600 focus:ring-blue-500 focus:border-blue-500"
+                      : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
                 }`}
               />
+              {isInvalidValue && (
+                <p className="text-[10px] text-rose-500 font-semibold mt-1.5 animate-pulse">
+                  valor inválido, por favor digite um valor correto
+                </p>
+              )}
             </div>
 
             <div>
@@ -260,7 +270,12 @@ export default function EditModal({
             </button>
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-[0_0_12px_rgba(59,130,246,0.2)] hover:scale-[1.01]"
+              disabled={isInvalidValue}
+              className={`text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-[0_0_12px_rgba(59,130,246,0.2)] hover:scale-[1.01] ${
+                isInvalidValue
+                  ? "bg-slate-800 text-slate-500 cursor-not-allowed shadow-none border border-slate-800/50"
+                  : "bg-blue-600 hover:bg-blue-500 text-white"
+              }`}
             >
               Salvar Alterações
             </button>
