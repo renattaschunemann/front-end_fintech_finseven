@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinSeven - Sistema de Controle Financeiro Pessoal 🚀
 
-## Getting Started
+O **FinSeven** é um sistema completo de gestão de finanças pessoais desenvolvido como parte do projeto integrador da FIAP. Ele permite ao usuário realizar o controle de fluxo de caixa (Receitas, Despesas e Investimentos), gerenciar suas Contas Bancárias e customizar Categorias com persistência dinâmica no banco de dados Oracle Cloud.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Tecnologias Utilizadas
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend:
+* **Framework**: Next.js 15 (React 19)
+* **Estilização**: Vanilla CSS & TailwindCSS (para transições dinâmicas e layouts responsivos)
+* **Ferramenta de Build**: Turbopack (`next dev`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Backend:
+* **Framework**: Spring Boot (Java 17)
+* **Persistência**: Spring Data JPA (Hibernate)
+* **Banco de Dados**: Oracle Cloud Database (com configuração de Sequences)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## ⚙️ Instruções de Inicialização
 
-To learn more about Next.js, take a look at the following resources:
+Certifique-se de ter o **Node.js (v18+)** e o **Java JDK 17+** instalados na sua máquina.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Inicializando o Backend (Spring Boot)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Abra um terminal na pasta do backend `Fase_7Integration_finseven/Fintech-FinSeven`.
+2. Certifique-se de que as configurações de conexão com o banco de dados Oracle estão corretas no arquivo `src/main/resources/application.properties` (caso utilize um banco local ou cloud específico).
+3. Execute o comando Maven Wrapper para compilar e iniciar o servidor Spring Boot:
 
-## Deploy on Vercel
+   **No Windows (PowerShell/CMD):**
+   ```bash
+   .\mvnw spring-boot:run
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   **No Linux/macOS:**
+   ```bash
+   chmod +x mvnw
+   ./mvnw spring-boot:run
+   ```
+4. O servidor do backend estará rodando no endereço: `http://localhost:8080`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+### 2. Inicializando o Frontend (Next.js)
+
+1. Abra um terminal na pasta do frontend `front-end_fintech_finseven`.
+2. Instale as dependências de pacotes do Node.js:
+   ```bash
+   npm install
+   ```
+3. Inicie o servidor de desenvolvimento do Next.js:
+   ```bash
+   npm run dev
+   ```
+4. O frontend estará disponível e rodando no endereço: `http://localhost:3000`
+
+---
+
+## 🔑 Dados de Autenticação para Testes (Login)
+
+Para fins de avaliação rápida e testes acadêmicos, definimos as seguintes credenciais padrão (Admin bypass):
+
+* **E-mail**: `admin@finseven.com`
+* **Senha**: `admin123`
+
+> 💡 **Nota**: O usuário também pode usar a guia **"Cadastrar"** na própria tela de autenticação para registrar novas contas. O sistema enviará os dados para o endpoint `POST /api/usuarios`, salvando-os de forma 100% dinâmica no banco de dados Oracle, permitindo realizar o login com as credenciais recém-criadas.
+
+---
+
+## 💎 Funcionalidades Integradas de CRUD
+
+* **Contas Bancárias (`/conta-bancaria`)**: Cadastrar, Listar e Deletar contas de bancos diretamente na base Oracle.
+* **Transações (`/transacao`, `/receitas`, `/despesas`, `/investimentos`)**: Lançar transações e visualizar históricos detalhados integrados dinamicamente com filtros por datas e categorias.
+* **Categorias Customizadas (`/categorias`)**: Cadastro e exclusão de categorias dinâmicas que se integram instantaneamente em todas as listas de seleção de transações da plataforma.
