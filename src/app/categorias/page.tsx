@@ -8,10 +8,10 @@ import { Transaction } from "@/interfaces";
 import { deleteTransaction, fetchTransactions } from "@/services/api";
 
 // Predefined default categories based on user requirements
-const DEFAULT_RECEITAS = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer", "Outras fontes"];
+const DEFAULT_RECEITAS = ["Salário", "Comissão", "Hora Extra", "Bônus", "Freelancer"];
 const DEFAULT_DESPESAS = [
   "Saúde", "Escola", "Transporte", "Alimentação", "Supermercado", 
-  "Lazer", "Água", "Luz", "Internet", "Aluguel", "Outras fontes de despesa"
+  "Lazer", "Água", "Luz", "Internet", "Aluguel"
 ];
 
 // Predefined investment classes grouped by type
@@ -182,26 +182,14 @@ export default function CategoriasPage() {
         ...DEFAULT_INVESTIMENTOS_FIXA,
         ...DEFAULT_INVESTIMENTOS_VARIAVEL,
         ...DEFAULT_INVESTIMENTOS_CRIPTO,
-        ...customCategories.Investimentos.map(c => c.descricao),
-        "Outras fontes de investimento"
+        ...customCategories.Investimentos.map(c => c.descricao)
       ];
     }
     return Array.from(new Set(list)) as string[];
   }, [selectedType, customCategories]);
 
-  // Manage custom source input visibility
   const handleCategorySelectChange = (val: string) => {
     setSelectedCategory(val);
-    if (
-      val === "Outras fontes" || 
-      val === "Outras fontes de despesa" || 
-      val === "Outras fontes de investimento"
-    ) {
-      setWritingCustom(true);
-      setCustomCategoryName("");
-    } else {
-      setWritingCustom(false);
-    }
   };
 
   // Save new custom category
@@ -570,7 +558,6 @@ export default function CategoriasPage() {
                           ))}
                         </optgroup>
                       )}
-                      <option value="Outras fontes de investimento">Outras fontes de investimento (Nova Categoria)</option>
                     </select>
                   ) : (
                     <select
@@ -584,47 +571,45 @@ export default function CategoriasPage() {
                     >
                       {availableCategoriesList.map((cat) => (
                         <option key={cat} value={cat}>
-                          {cat === "Outras fontes"
-                            ? "Outras fontes (Nova Categoria)"
-                            : cat === "Outras fontes de despesa"
-                            ? "Outras fontes de despesa (Nova Categoria)"
-                            : cat}
+                          {cat}
                         </option>
                       ))}
                     </select>
                   )}
                 </div>
 
-                {/* Custom Source Input & Registration Form */}
-                {writingCustom && (
-                  <form onSubmit={handleSaveCustomCategory} className="border border-dashed border-slate-800/40 p-4 rounded-xl space-y-3 bg-slate-900/10 animate-fade-in mt-3">
-                    <div>
-                      <label className={`text-[9px] font-bold uppercase tracking-wider block mb-1.5 ${
-                        theme === "dark" ? "text-slate-400" : "text-slate-500"
-                      }`}>
-                        Nome da Nova Categoria
-                      </label>
+                {/* Inline Registration Form */}
+                <form onSubmit={handleSaveCustomCategory} className={`border border-dashed p-4 rounded-xl space-y-3 mt-4 ${
+                  theme === "dark" ? "border-slate-800/60 bg-slate-900/10" : "border-slate-200 bg-slate-50/50"
+                }`}>
+                  <div>
+                    <label className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 ${
+                      theme === "dark" ? "text-slate-400" : "text-slate-500"
+                    }`}>
+                      Criar Nova Categoria de {selectedType === "Receitas" ? "Receita" : selectedType === "Despesas" ? "Despesa" : "Investimento"}
+                    </label>
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         value={customCategoryName}
                         onChange={(e) => setCustomCategoryName(e.target.value)}
                         required
                         placeholder="Ex: Consultoria, Academia, etc."
-                        className={`w-full px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all outline-none ${
+                        className={`flex-1 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all outline-none ${
                           theme === "dark"
                             ? "bg-[#070b13] border-slate-800/70 text-slate-200 focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 placeholder-slate-600"
                             : "bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-200 placeholder-slate-400"
                         }`}
                       />
+                      <button
+                        type="submit"
+                        className="bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-400 font-extrabold px-4 rounded-xl text-xs transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                      >
+                        Salvar
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-400 font-bold py-2 px-3 rounded-lg text-xs transition-all cursor-pointer hover:scale-[1.005] active:scale-[0.995]"
-                    >
-                      Salvar Categoria Customizada
-                    </button>
-                  </form>
-                )}
+                  </div>
+                </form>
 
                 {/* Manager for Custom Categories */}
                 <div className={`mt-6 pt-5 border-t ${theme === "dark" ? "border-slate-800/60" : "border-slate-200"}`}>
