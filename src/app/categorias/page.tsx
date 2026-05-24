@@ -166,20 +166,21 @@ export default function CategoriasPage() {
 
   // Compile lists of available categories (combining default and custom ones)
   const availableCategoriesList = useMemo(() => {
+    let list: string[] = [];
     if (selectedType === "Receitas") {
-      return [...DEFAULT_RECEITAS, ...customCategories.Receitas];
+      list = [...DEFAULT_RECEITAS, ...customCategories.Receitas];
+    } else if (selectedType === "Despesas") {
+      list = [...DEFAULT_DESPESAS, ...customCategories.Despesas];
+    } else {
+      list = [
+        ...DEFAULT_INVESTIMENTOS_FIXA,
+        ...DEFAULT_INVESTIMENTOS_VARIAVEL,
+        ...DEFAULT_INVESTIMENTOS_CRIPTO,
+        ...customCategories.Investimentos,
+        "Outras fontes de investimento"
+      ];
     }
-    if (selectedType === "Despesas") {
-      return [...DEFAULT_DESPESAS, ...customCategories.Despesas];
-    }
-    // Investimentos lists grouped
-    return [
-      ...DEFAULT_INVESTIMENTOS_FIXA,
-      ...DEFAULT_INVESTIMENTOS_VARIAVEL,
-      ...DEFAULT_INVESTIMENTOS_CRIPTO,
-      ...customCategories.Investimentos,
-      "Outras fontes de investimento"
-    ];
+    return Array.from(new Set(list)) as string[];
   }, [selectedType, customCategories]);
 
   // Manage custom source input visibility
