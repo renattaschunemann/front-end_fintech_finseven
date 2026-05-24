@@ -19,11 +19,10 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
   const paddingRight = 10;
   const paddingTop = 25;
   const paddingBottom = 30;
-  
+
   const graphHeight = chartHeight - paddingTop - paddingBottom;
   const graphWidth = chartWidth - paddingLeft - paddingRight;
 
-  // Calculate dynamic maximum value to fit the chart beautifully under any volume of transactions
   const rawMax = Math.max(...chartData.map(d => Math.max(d.receitas, d.despesas)), 6000);
   let step = 1000;
   if (rawMax > 12000) {
@@ -34,9 +33,8 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
   const maxVal = Math.ceil(rawMax / step) * step;
 
   return (
-    <div className={`backdrop-blur border rounded-2xl p-6 shadow-md relative transition-all ${
-      theme === "dark" ? "bg-[#101422]/70 border-slate-800/40" : "bg-white border-slate-200 shadow-sm"
-    }`}>
+    <div className={`backdrop-blur border rounded-2xl p-6 shadow-md relative transition-all ${theme === "dark" ? "bg-[#101422]/70 border-slate-800/40" : "bg-white border-slate-200 shadow-sm"
+      }`}>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <div>
           <h3 className={`text-base font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>Receitas vs. Despesas Mensais</h3>
@@ -61,25 +59,25 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
             {Array.from({ length: Math.round(maxVal / step) + 1 }).map((_, i) => {
               const val = i * step;
               const y = chartHeight - paddingBottom - (val / maxVal) * graphHeight;
-              
+
               return (
                 <g key={i}>
                   {i > 0 && (
-                    <line 
-                      x1={paddingLeft} 
-                      y1={y} 
-                      x2={chartWidth - paddingRight} 
-                      y2={y} 
-                      stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} 
-                      strokeWidth="1" 
-                      strokeDasharray="4 4" 
+                    <line
+                      x1={paddingLeft}
+                      y1={y}
+                      x2={chartWidth - paddingRight}
+                      y2={y}
+                      stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"}
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
                     />
                   )}
-                  <text 
-                    x={paddingLeft - 10} 
-                    y={y + 4} 
-                    fill={theme === "dark" ? "#64748b" : "#475569"} 
-                    fontSize="10" 
+                  <text
+                    x={paddingLeft - 10}
+                    y={y + 4}
+                    fill={theme === "dark" ? "#64748b" : "#475569"}
+                    fontSize="10"
                     fontWeight="bold"
                     textAnchor="end"
                   >
@@ -89,13 +87,13 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
               );
             })}
 
-            <line 
-              x1={paddingLeft} 
-              y1={chartHeight - paddingBottom} 
-              x2={chartWidth - paddingRight} 
-              y2={chartHeight - paddingBottom} 
-              stroke={theme === "dark" ? "#334155" : "#cbd5e1"} 
-              strokeWidth="1.5" 
+            <line
+              x1={paddingLeft}
+              y1={chartHeight - paddingBottom}
+              x2={chartWidth - paddingRight}
+              y2={chartHeight - paddingBottom}
+              stroke={theme === "dark" ? "#334155" : "#cbd5e1"}
+              strokeWidth="1.5"
             />
 
             {chartData.map((d, index) => {
@@ -189,7 +187,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
               }
 
               return (
-                <g 
+                <g
                   transform={`translate(${tooltipX}, ${activeTooltip.y})`}
                   className="transition-all duration-200 pointer-events-none"
                   pointerEvents="none"
@@ -207,7 +205,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     opacity="0.96"
                     pointerEvents="none"
                   />
-                  
+
                   {/* Tooltip little bottom arrow */}
                   <path
                     d={`M ${arrowX - 6} -15 L ${arrowX} -9 L ${arrowX + 6} -15 Z`}
@@ -216,14 +214,14 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     strokeWidth="1.5"
                     pointerEvents="none"
                   />
-                  
+
                   {/* Tooltip little bottom arrow fill cover */}
                   <path
                     d={`M ${arrowX - 5} -16.5 L ${arrowX} -10 L ${arrowX + 5} -16.5 Z`}
                     fill={theme === "dark" ? "#070b13" : "#ffffff"}
                     pointerEvents="none"
                   />
-                  
+
                   {/* Header: Month name */}
                   <text
                     x="-73"
@@ -235,7 +233,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   >
                     {activeTooltip.month}
                   </text>
-                  
+
                   {/* Active indicator badge if last month */}
                   {activeTooltip.month === chartData[chartData.length - 1]?.name && (
                     <g transform="translate(38, -106)" pointerEvents="none">

@@ -12,13 +12,11 @@ export default function Header({
   onDateFilterChange,
 }: HeaderProps) {
   const router = useRouter();
-  const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<"today" | "7days" | "30days" | "all">("today");
   const [loggedUser, setLoggedUser] = useState<{ name: string; cpf: string; email: string } | null>(null);
 
-  const shareRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -34,9 +32,6 @@ export default function Header({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (shareRef.current && !shareRef.current.contains(event.target as Node)) {
-        setShareDropdownOpen(false);
-      }
       if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
         setDateDropdownOpen(false);
       }
@@ -50,40 +45,7 @@ export default function Header({
     };
   }, []);
 
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      const url = window.location.origin;
-      navigator.clipboard.writeText(url)
-        .then(() => {
-          showToast("Link do painel copiado com sucesso! Compartilhe com quem quiser.", "success");
-          setShareDropdownOpen(false);
-        })
-        .catch(() => {
-          showToast("Não foi possível copiar o link automaticamente.", "error");
-        });
-    }
-  };
 
-  const handleShareWhatsApp = () => {
-    if (typeof window !== "undefined") {
-      const text = encodeURIComponent(
-        "Ei! Olha só como está o meu painel financeiro do FinSeven! Rápido, intuitivo e moderno. Confere aí!"
-      );
-      window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
-      setShareDropdownOpen(false);
-    }
-  };
-
-  const handleShareEmail = () => {
-    if (typeof window !== "undefined") {
-      const subject = encodeURIComponent("Meu Painel de Gestão Financeira FinSeven");
-      const body = encodeURIComponent(
-        "Olá! Estou utilizando o FinSeven para gerenciar minhas despesas, receitas e investimentos com um painel interativo incrível. Venha conferir!"
-      );
-      window.location.href = `mailto:?subject=${subject}&body=${body}`;
-      setShareDropdownOpen(false);
-    }
-  };
 
   const handleExportCSV = () => {
     try {
@@ -186,63 +148,7 @@ export default function Header({
           </button>
         )}
 
-        <div className="relative" ref={shareRef}>
-          <button 
-            onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
-            className={`border text-xs font-semibold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
-              theme === "dark" 
-                ? "bg-slate-800/50 hover:bg-slate-800 border-slate-700/40 hover:border-slate-700 text-slate-300 hover:text-slate-100" 
-                : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
-            } ${shareDropdownOpen ? (theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300") : ""}`}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 10.742l4.316-2.158m0 0a3 3 0 10-1.222-2.316L7.462 8.426a3 3 0 100 7.148l4.316 2.158a3 3 0 101.222-2.316" />
-            </svg>
-            <span className="hidden md:inline">Compartilhar</span>
-          </button>
 
-          {shareDropdownOpen && (
-            <div className={`absolute right-0 mt-2 w-48 rounded-2xl border p-1.5 shadow-xl backdrop-blur-xl z-30 ${
-              theme === "dark" 
-                ? "bg-[#101422]/95 border-slate-800/50 shadow-black/60 text-slate-200" 
-                : "bg-white/95 border-slate-200 shadow-slate-200/55 text-slate-700"
-            }`}>
-              <button 
-                onClick={handleCopyLink}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                Copiar Link
-              </button>
-              <button 
-                onClick={handleShareWhatsApp}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                WhatsApp
-              </button>
-              <button 
-                onClick={handleShareEmail}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
-                  theme === "dark" ? "hover:bg-slate-800/50" : "hover:bg-slate-100"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Enviar por E-mail
-              </button>
-            </div>
-          )}
-        </div>
 
         <button 
           onClick={handleExportCSV}
