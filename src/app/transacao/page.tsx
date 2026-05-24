@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Transaction } from "@/interfaces";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { createTransaction } from "@/services/api";
 
-function LancamentoContent() {
+function TransacaoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type");
@@ -15,7 +16,7 @@ function LancamentoContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [activeMenu, setActiveMenu] = useState("Lançamento");
+  const [activeMenu, setActiveMenu] = useState("Transação");
 
   const [formType, setFormType] = useState<"Receitas" | "Despesas" | "Investimentos">("Despesas");
   const [formCategory, setFormCategory] = useState("Supermercado");
@@ -41,12 +42,20 @@ function LancamentoContent() {
   }, [formCategory]);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const [userId, setUserId] = useState<number>(1);
 
   useEffect(() => {
     const loggedUser = localStorage.getItem("finseven-logged-user");
     if (!loggedUser) {
       router.push("/login");
+      return;
     }
+    try {
+      const parsed = JSON.parse(loggedUser);
+      if (parsed.id) {
+        setUserId(Number(parsed.id));
+      }
+    } catch (e) {}
   }, [router]);
 
   useEffect(() => {
@@ -134,7 +143,7 @@ function LancamentoContent() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const valNum = parseFloat(formValue.replace(",", "."));
     if (isNaN(valNum) || valNum <= 0) {
@@ -148,22 +157,24 @@ function LancamentoContent() {
       ? "Investimento avulso" 
       : "Despesa avulsa";
 
-    const newTx: Transaction = {
-      id: "tx-" + Date.now(),
+    const tempTx: Omit<Transaction, "id"> = {
       date: formDate,
       category: formCategory,
       description: formDescription || defaultDesc,
       account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
       type: formType
     };
 
-    setTransactions([newTx, ...transactions]);
-    showToast("Lançamento efetuado com sucesso!", "success");
-
-    setTimeout(() => {
-      router.push("/");
-    }, 1200);
+    try {
+      await createTransaction(tempTx, userId);
+      showToast("Transação efetuada com sucesso!", "success");
+      setTimeout(() => {
+        router.push("/");
+      }, 1200);
+    } catch (error) {
+      showToast("Erro ao efetuar transação no servidor.", "error");
+    }
   };
 
   const getThemeColor = () => {
@@ -200,8 +211,8 @@ function LancamentoContent() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            setActiveMenu("Lançamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            setActiveMenu("Transação");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -249,7 +260,7 @@ function LancamentoContent() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className={`text-xl font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-slate-850"}`}>Novo Lançamento</h2>
+                  <h2 className={`text-xl font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-slate-850"}`}>Nova Transação</h2>
                   <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>Gere movimentações financeiras completas de fluxo.</p>
                 </div>
               </div>
@@ -273,7 +284,7 @@ function LancamentoContent() {
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider block mb-2.5 ${
                   theme === "dark" ? "text-slate-400" : "text-slate-500"
-                }`}>Tipo de Lançamento</label>
+                }`}>Tipo de Transação</label>
                 
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -418,7 +429,7 @@ function LancamentoContent() {
                 <div>
                   <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
                     theme === "dark" ? "text-slate-400" : "text-slate-500"
-                  }`}>Data do Lançamento</label>
+                  }`}>Data da Transação</label>
                   <input
                     type="date"
                     required
@@ -467,7 +478,7 @@ function LancamentoContent() {
                       : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
                   }`}
                 >
-                  Cancelar Lançamento
+                  Cancelar Transação
                 </button>
 
                 <button
@@ -480,7 +491,7 @@ function LancamentoContent() {
                       : "bg-rose-600 hover:bg-rose-500 shadow-rose-500/20"
                   }`}
                 >
-                  Salvar Lançamento
+                  Salvar Transação
                 </button>
               </div>
             </form>
@@ -491,14 +502,14 @@ function LancamentoContent() {
   );
 }
 
-export default function LancamentoPage() {
+export default function TransacaoPage() {
   return (
     <Suspense fallback={
       <div className="h-screen w-screen flex items-center justify-center bg-[#0b0f19] text-slate-400">
         Carregando formulário...
       </div>
     }>
-      <LancamentoContent />
+      <TransacaoContent />
     </Suspense>
   );
 }

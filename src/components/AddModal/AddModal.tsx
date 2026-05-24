@@ -52,7 +52,7 @@ export default function AddModal({
             <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Novo Lançamento
+            Nova Transação
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -294,7 +294,7 @@ export default function AddModal({
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] hover:scale-[1.01]"
             >
-              Confirmar Lançamento
+              Confirmar Transação
             </button>
           </div>
         </form>

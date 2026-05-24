@@ -151,6 +151,7 @@ export default function LoginPage() {
 
         // Autentica a sessão ativa no localStorage conforme esperado pelas telas de Header e Sidebar
         localStorage.setItem("finseven-logged-user", JSON.stringify({
+          id: savedLogin.usuario.id,
           name: savedLogin.usuario.nome,
           cpf: String(savedLogin.usuario.cpf),
           email: savedLogin.usuario.email
@@ -174,8 +175,9 @@ export default function LoginPage() {
       // Caso padrão do Admin em caso de testes rápidos sem banco
       if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
         const defaultAdmin = {
+          id: 1,
           name: "Administrador FinSeven",
-          cpf: "12345678900",
+          cpf: "12345567890",
           email: "admin@finseven.com"
         };
         localStorage.setItem("finseven-logged-user", JSON.stringify(defaultAdmin));
@@ -212,6 +214,7 @@ export default function LoginPage() {
 
         // Autentica a sessão do usuário
         localStorage.setItem("finseven-logged-user", JSON.stringify({
+          id: matchedLogin.usuario.id,
           name: matchedLogin.usuario.nome,
           cpf: String(matchedLogin.usuario.cpf),
           email: matchedLogin.usuario.email

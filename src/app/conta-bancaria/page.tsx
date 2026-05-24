@@ -334,8 +334,8 @@ export default function ContaBancariaPage() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            router.push("/lancamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -360,7 +360,7 @@ export default function ContaBancariaPage() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento")}
+          onAddClick={() => router.push("/transacao")}
           showToast={showToast}
         />
 

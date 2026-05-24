@@ -94,7 +94,7 @@ export default function Header({
       }
       
       if (txs.length === 0) {
-        showToast("Nenhum lançamento encontrado para exportar.", "info");
+        showToast("Nenhuma transação encontrada para exportar.", "info");
         return;
       }
 
@@ -123,7 +123,7 @@ export default function Header({
       link.click();
       document.body.removeChild(link);
 
-      showToast(`Exportação concluída! ${txs.length} lançamentos salvos no arquivo CSV.`, "success");
+      showToast(`Exportação concluída! ${txs.length} transações salvas no arquivo CSV.`, "success");
     } catch (error) {
       showToast("Ocorreu um erro ao exportar os dados.", "error");
     }
@@ -133,13 +133,13 @@ export default function Header({
     setSelectedFilter(filter);
     setDateDropdownOpen(false);
     
-    let message = "Filtrando lançamentos de hoje.";
+    let message = "Filtrando transações de hoje.";
     if (filter === "7days") {
-      message = "Filtrando lançamentos dos últimos 7 dias.";
+      message = "Filtrando transações dos últimos 7 dias.";
     } else if (filter === "30days") {
-      message = "Filtrando lançamentos dos últimos 30 dias.";
+      message = "Filtrando transações dos últimos 30 dias.";
     } else if (filter === "all") {
-      message = "Mostrando todos os lançamentos.";
+      message = "Mostrando todas as transações.";
     }
 
     showToast(message, "info");
@@ -182,7 +182,7 @@ export default function Header({
             onClick={onAddClick}
             className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-sm font-extrabold px-6 py-3 rounded-2xl hover:scale-[1.04] transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_35px_rgba(16,185,129,0.65)] border border-emerald-400/30 text-white cursor-pointer flex items-center justify-center"
           >
-            <span>+ Lançamento</span>
+            <span>+ Transação</span>
           </button>
         )}
 

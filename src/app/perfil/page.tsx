@@ -127,7 +127,7 @@ function PerfilContent() {
 
   // Stats calculation
   const stats = useMemo(() => {
-    let totalLançamentos = transactions.length;
+    let totalTransacoes = transactions.length;
     let totalReceitas = 0;
     let totalDespesas = 0;
     let totalInvestido = 0;
@@ -147,7 +147,7 @@ function PerfilContent() {
     const netWorth = carryOver + balance;
 
     return {
-      totalLançamentos,
+      totalTransacoes,
       netWorth,
       totalReceitas,
       totalDespesas,
@@ -283,8 +283,8 @@ function PerfilContent() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            router.push("/lancamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -307,7 +307,7 @@ function PerfilContent() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento")}
+          onAddClick={() => router.push("/transacao")}
           showToast={showToast}
         />
 
@@ -532,9 +532,9 @@ function PerfilContent() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-[8px] font-bold uppercase tracking-wider block text-slate-500">Lançamentos</span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider block text-slate-500">Transações</span>
                     <span className={`text-xs font-bold ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
-                      {stats.totalLançamentos} registros
+                      {stats.totalTransacoes} registros
                     </span>
                   </div>
                 </div>

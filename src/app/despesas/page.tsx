@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import TransactionTable from "@/components/TransactionTable";
 import EditModal from "@/components/EditModal";
+import { fetchTransactions, updateTransaction, deleteTransaction } from "@/services/api";
 
 function DespesasContent() {
   const router = useRouter();
@@ -160,39 +161,45 @@ function DespesasContent() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
+  const [userId, setUserId] = useState<number>(1);
+
   useEffect(() => {
     const loggedUser = localStorage.getItem("finseven-logged-user");
     if (!loggedUser) {
       router.push("/login");
+      return;
     }
+    try {
+      const parsed = JSON.parse(loggedUser);
+      if (parsed.id) {
+        setUserId(Number(parsed.id));
+      }
+    } catch (e) {}
   }, [router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("finseven-transactions");
-    const initialTxs = generateMockTransactions();
-    if (saved) {
+    const loadAPI = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        const allowed = ["Itaú", "Banco do Brasil", "Outros"];
-        const sanitized = parsed.map((t: any) => {
-          if (!allowed.includes(t.account)) {
-            return { ...t, account: t.type === "Receitas" ? "Banco do Brasil" : "Itaú" };
+        const apiTxs = await fetchTransactions();
+        setTransactions(apiTxs);
+      } catch (error) {
+        console.warn("Não foi possível carregar as transações da API, usando localStorage.", error);
+        const saved = localStorage.getItem("finseven-transactions");
+        const initialTxs = generateMockTransactions();
+        if (saved) {
+          try {
+            setTransactions(JSON.parse(saved));
+          } catch (e) {
+            setTransactions(initialTxs);
           }
-          return t;
-        });
-        const hasInvestments = sanitized.some((t: any) => t.type === "Investimentos");
-        if (sanitized.length < 10 || !hasInvestments) {
-          setTransactions(initialTxs);
         } else {
-          setTransactions(sanitized);
+          setTransactions(initialTxs);
         }
-      } catch (e) {
-        setTransactions(initialTxs);
       }
-    } else {
-      setTransactions(initialTxs);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    };
+
+    loadAPI();
   }, []);
 
   useEffect(() => {
@@ -308,7 +315,7 @@ function DespesasContent() {
     setIsEditModalOpen(true);
   };
 
-  const handleEditTransaction = (e: React.FormEvent) => {
+  const handleEditTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTransaction) return;
     const valNum = parseFloat(formValue.replace(",", "."));
@@ -322,19 +329,31 @@ function DespesasContent() {
       category: formCategory,
       description: formDescription,
       account: formAccount,
-      value: formType === "Receitas" ? valNum : -valNum,
+      value: formType === "Receitas" ? valNum : formType === "Investimentos" ? valNum : -valNum,
       type: formType
     };
-    setTransactions(transactions.map(t => t.id === editingTransaction.id ? updatedTx : t));
-    setIsEditModalOpen(false);
-    setEditingTransaction(null);
-    showToast("Lançamento atualizado com sucesso!");
+    try {
+      const savedTx = await updateTransaction(updatedTx, userId);
+      setTransactions(transactions.map(t => t.id === editingTransaction.id ? savedTx : t));
+      setIsEditModalOpen(false);
+      setEditingTransaction(null);
+      showToast("Transação atualizada com sucesso!");
+    } catch (error) {
+      showToast("Erro ao atualizar transação no servidor.", "error");
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este lançamento?")) {
-      setTransactions(transactions.filter(t => t.id !== id));
-      showToast("Lançamento excluído com sucesso!", "info");
+  const handleDeleteTransaction = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir esta transação?")) {
+      const txToDelete = transactions.find(t => t.id === id);
+      if (!txToDelete) return;
+      try {
+        await deleteTransaction(id, txToDelete.type);
+        setTransactions(transactions.filter(t => t.id !== id));
+        showToast("Transação excluída com sucesso!", "info");
+      } catch (error) {
+        showToast("Erro ao excluir transação no servidor.", "error");
+      }
     }
   };
 
@@ -364,8 +383,8 @@ function DespesasContent() {
         setActiveMenu={(menu) => {
           if (menu === "Home") {
             router.push("/");
-          } else if (menu === "Lançamento") {
-            router.push("/lancamento");
+          } else if (menu === "Lançamento" || menu === "Transação") {
+            router.push("/transacao");
           } else if (menu === "Receitas") {
             router.push("/receitas");
           } else if (menu === "Despesas") {
@@ -390,7 +409,7 @@ function DespesasContent() {
         <Header
           setSidebarOpen={setSidebarOpen}
           theme={theme}
-          onAddClick={() => router.push("/lancamento?type=Despesas")}
+          onAddClick={() => router.push("/transacao?type=Despesas")}
           showToast={showToast}
         />
 
