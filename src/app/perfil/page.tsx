@@ -9,13 +9,13 @@ import { Transaction } from "@/interfaces";
 function PerfilContent() {
   const router = useRouter();
   
-  // Theme state
+  
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Perfil");
 
-  // User details state
+  
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
@@ -23,13 +23,13 @@ function PerfilContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [originalCpf, setOriginalCpf] = useState("");
 
-  // Statistics
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
-  // Toast notifications
+  
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
 
-  // Sync theme
+  
   useEffect(() => {
     const savedTheme = localStorage.getItem("finseven-theme") as "dark" | "light";
     if (savedTheme && (savedTheme === "dark" || savedTheme === "light")) {
@@ -50,7 +50,7 @@ function PerfilContent() {
     }
   }, [theme]);
 
-  // Auth Guard & Loading Initial Data
+  
   useEffect(() => {
     const loggedUserJson = localStorage.getItem("finseven-logged-user");
     if (!loggedUserJson) {
@@ -69,20 +69,20 @@ function PerfilContent() {
       return;
     }
 
-    // Load transactions for statistics
+    
     const savedTxs = localStorage.getItem("finseven-transactions");
     if (savedTxs) {
       try {
         setTransactions(JSON.parse(savedTxs));
       } catch (e) {
-        // ignore
+        
       }
     }
 
     setIsLoaded(true);
   }, [router]);
 
-  // Toast Auto-Dismiss
+  
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => {
@@ -104,7 +104,7 @@ function PerfilContent() {
     });
   };
 
-  // CPF input format helper
+  
   const formatCpf = (val: string) => {
     const numbersOnly = val.replace(/\D/g, "");
     let formatted = numbersOnly;
@@ -125,7 +125,7 @@ function PerfilContent() {
     setCpf(formatCpf(val));
   };
 
-  // Stats calculation
+  
   const stats = useMemo(() => {
     let totalTransacoes = transactions.length;
     let totalReceitas = 0;
@@ -162,7 +162,7 @@ function PerfilContent() {
     }).format(val);
   };
 
-  // Profile Save handler
+  
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -192,11 +192,11 @@ function PerfilContent() {
       return;
     }
 
-    // Get current registered users
+    
     const usersJson = localStorage.getItem("finseven-users");
     let users = usersJson ? JSON.parse(usersJson) : [];
 
-    // Check if new CPF belongs to someone else
+    
     if (cleanCpf !== originalCpf) {
       const userConflict = users.find((u: any) => u.cpf === cleanCpf);
       if (userConflict) {
@@ -205,7 +205,7 @@ function PerfilContent() {
       }
     }
 
-    // Update user inside simulation array
+    
     let userIndex = users.findIndex((u: any) => u.cpf === originalCpf);
     const updatedUser: any = {
       name: nome.trim(),
@@ -214,19 +214,19 @@ function PerfilContent() {
     };
 
     if (userIndex !== -1) {
-      // Retain existing password if a new one is not provided
+      
       updatedUser.password = password || users[userIndex].password;
       users[userIndex] = updatedUser;
     } else {
-      // In case logged-user exists but not in db, register them
+      
       updatedUser.password = password || "admin123";
       users.push(updatedUser);
     }
 
-    // Save updated registries
+    
     localStorage.setItem("finseven-users", JSON.stringify(users));
 
-    // Update current active session
+    
     localStorage.setItem("finseven-logged-user", JSON.stringify({
       name: updatedUser.name,
       cpf: updatedUser.cpf,
@@ -239,7 +239,7 @@ function PerfilContent() {
 
     showToast("Perfil atualizado com sucesso!", "success");
 
-    // Force sidebar to update user info state
+    
     setTimeout(() => {
       window.location.reload();
     }, 1000);
@@ -326,7 +326,7 @@ function PerfilContent() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Form Column */}
+            {}
             <div className={`lg:col-span-2 p-6 rounded-3xl border backdrop-blur-md transition-all ${
               theme === "dark" 
                 ? "bg-[#101422]/70 border-slate-800/60 shadow-[0_15px_30px_rgba(0,0,0,0.2)]" 
@@ -464,7 +464,7 @@ function PerfilContent() {
               </form>
             </div>
 
-            {/* Resume / Stats Column */}
+            {}
             <div className="space-y-6">
               <div className={`p-6 rounded-3xl border backdrop-blur-md transition-all ${
                 theme === "dark" 
@@ -514,7 +514,7 @@ function PerfilContent() {
                 </div>
               </div>
 
-              {/* Status details card */}
+              {}
               <div className={`p-6 rounded-3xl border backdrop-blur-md transition-all text-center relative overflow-hidden ${
                 theme === "dark" 
                   ? "bg-slate-900/40 border-slate-800/40 text-slate-400" 
