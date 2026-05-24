@@ -80,17 +80,13 @@ export default function LoginPage() {
   };
 
   // Submit handlers
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password.length < 6) {
       showToast("A senha deve ter no mínimo 6 caracteres.", "error");
       return;
     }
-
-    // Get current registered users
-    const usersJson = localStorage.getItem("finseven-users");
-    let users = usersJson ? JSON.parse(usersJson) : [];
 
     if (activeTab === "register") {
       const cleanCpf = cpf.replace(/\D/g, "");
@@ -114,87 +110,130 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if CPF or Email is already registered
-      const userExistsCpf = users.find((u: any) => u.cpf === cleanCpf);
-      if (userExistsCpf) {
-        showToast("Este CPF já está cadastrado no sistema.", "error");
-        return;
+      try {
+        const cpfNumber = Number(cleanCpf);
+        if (isNaN(cpfNumber)) {
+          showToast("CPF inválido.", "error");
+          return;
+        }
+
+        // 1. Verificar se o e-mail ou CPF já estão cadastrados para evitar duplicidade
+        const checkRes = await fetch("http://localhost:8080/api/usuarios");
+        if (checkRes.ok) {
+          const registeredLogins = await checkRes.json();
+          const emailExists = registeredLogins.some((item: any) => 
+            item.usuario?.email?.toLowerCase() === email.trim().toLowerCase()
+          );
+          if (emailExists) {
+            showToast("Este E-mail já está cadastrado no sistema.", "error");
+            return;
+          }
+
+          const cpfExists = registeredLogins.some((item: any) => 
+            item.usuario?.cpf === cpfNumber
+          );
+          if (cpfExists) {
+            showToast("Este CPF já está cadastrado no sistema.", "error");
+            return;
+          }
+        }
+
+        const newRegisterPayload = {
+          senha: password,
+          tentativasLogin: 0,
+          contaBloqueada: false,
+          usuario: {
+            nome: nome.trim(),
+            cpf: cpfNumber,
+            email: email.trim()
+          }
+        };
+
+        const response = await fetch("http://localhost:8080/api/usuarios", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(newRegisterPayload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao salvar cadastro no servidor.");
+        }
+
+        const savedLogin = await response.json();
+
+        // Autentica a sessão ativa no localStorage conforme esperado pelas telas de Header e Sidebar
+        localStorage.setItem("finseven-logged-user", JSON.stringify({
+          name: savedLogin.usuario.nome,
+          cpf: String(savedLogin.usuario.cpf),
+          email: savedLogin.usuario.email
+        }));
+
+        showToast("Cadastro realizado com sucesso! Bem-vindo.", "success");
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+
+      } catch (error: any) {
+        showToast(error.message || "Erro de conexão com o back-end.", "error");
       }
-
-      const userExistsEmail = users.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase());
-      if (userExistsEmail) {
-        showToast("Este E-mail já está cadastrado no sistema.", "error");
-        return;
-      }
-
-      const newUser = {
-        name: nome.trim(),
-        cpf: cleanCpf,
-        email: email.trim(),
-        password: password
-      };
-
-      // Save user to simulated registry
-      users.push(newUser);
-      localStorage.setItem("finseven-users", JSON.stringify(users));
-
-      // Authenticate active session
-      localStorage.setItem("finseven-logged-user", JSON.stringify({
-        name: newUser.name,
-        cpf: newUser.cpf,
-        email: newUser.email
-      }));
-
-      showToast("Cadastro realizado com sucesso! Bem-vindo.", "success");
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
     } else {
-      // Login flow using Email
+      // Login flow usando o e-mail
       if (!email.includes("@")) {
         showToast("Por favor, preencha um e-mail válido.", "error");
         return;
       }
 
-      const matchedUser = users.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
-
-      if (!matchedUser) {
-        // Fallback default admin user if database is empty to ease initial usage
-        if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
-          const defaultAdmin = {
-            name: "Administrador FinSeven",
-            cpf: "12345678900",
-            email: "admin@finseven.com"
-          };
-          localStorage.setItem("finseven-logged-user", JSON.stringify(defaultAdmin));
-          
-          // Seed the users database if empty
-          if (users.length === 0) {
-            localStorage.setItem("finseven-users", JSON.stringify([{ ...defaultAdmin, password: "admin123" }]));
-          }
-
-          showToast("Login administrativo realizado com sucesso!", "success");
-          setTimeout(() => {
-            router.push("/");
-          }, 1000);
-          return;
-        }
-
-        showToast("E-mail ou senha inválidos.", "error");
+      // Caso padrão do Admin em caso de testes rápidos sem banco
+      if (email.trim().toLowerCase() === "admin@finseven.com" && password === "admin123") {
+        const defaultAdmin = {
+          name: "Administrador FinSeven",
+          cpf: "12345678900",
+          email: "admin@finseven.com"
+        };
+        localStorage.setItem("finseven-logged-user", JSON.stringify(defaultAdmin));
+        
+        showToast("Login administrativo realizado com sucesso!", "success");
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
         return;
       }
 
-      // Authenticate session
-      localStorage.setItem("finseven-logged-user", JSON.stringify({
-        name: matchedUser.name,
-        cpf: matchedUser.cpf,
-        email: matchedUser.email
-      }));
+      try {
+        const response = await fetch("http://localhost:8080/api/usuarios");
+        if (!response.ok) {
+          throw new Error("Erro de conexão ao buscar lista de usuários.");
+        }
 
-      showToast("Login realizado com sucesso!", "success");
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
+        const registeredLogins = await response.json();
+        
+        const matchedLogin = registeredLogins.find((item: any) => 
+          item.usuario?.email?.toLowerCase() === email.trim().toLowerCase() && 
+          item.senha === password
+        );
+
+        if (!matchedLogin) {
+          showToast("E-mail ou senha inválidos.", "error");
+          return;
+        }
+
+        // Autentica a sessão do usuário
+        localStorage.setItem("finseven-logged-user", JSON.stringify({
+          name: matchedLogin.usuario.nome,
+          cpf: String(matchedLogin.usuario.cpf),
+          email: matchedLogin.usuario.email
+        }));
+
+        showToast("Login realizado com sucesso!", "success");
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+
+      } catch (error: any) {
+        showToast("Erro ao conectar com o back-end: " + error.message, "error");
+      }
     }
   };
 
