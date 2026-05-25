@@ -662,9 +662,9 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
 
           {reportType === "Extrato do Mês" && (
             <div className="space-y-4 animateFadeIn">
-              <p className="text-slate-400 font-medium leading-relaxed">
-                Demonstrativo detalhado de todas as movimentações financeiras do mês corrente (<span className="text-blue-400 font-bold">Maio 2026</span>), ordenadas cronologicamente da mais antiga para a mais recente.
-              </p>
+              <div className="text-blue-400 font-bold text-sm mb-2">
+                Maio 2026
+              </div>
 
               <div className={`border rounded-2xl overflow-hidden max-h-[300px] overflow-y-auto pr-1 ${
                 theme === "dark" ? "border-slate-800/60" : "border-slate-200"
