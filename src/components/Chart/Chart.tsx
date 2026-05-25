@@ -11,6 +11,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
     month: string;
     receitas: number;
     despesas: number;
+    investimentos: number;
   } | null>(null);
 
   const chartHeight = 250;
@@ -23,7 +24,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
   const graphHeight = chartHeight - paddingTop - paddingBottom;
   const graphWidth = chartWidth - paddingLeft - paddingRight;
 
-  const rawMax = Math.max(...chartData.map(d => Math.max(d.receitas, d.despesas)), 6000);
+  const rawMax = Math.max(...chartData.map(d => Math.max(d.receitas, d.despesas, d.investimentos || 0)), 6000);
   let step = 1000;
   if (rawMax > 12000) {
     step = 3000;
@@ -49,6 +50,10 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded bg-rose-500" />
             <span className={theme === "dark" ? "text-slate-400" : "text-slate-500"}>Despesas</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded bg-cyan-500" />
+            <span className={theme === "dark" ? "text-slate-400" : "text-slate-500"}>Investimentos</span>
           </div>
         </div>
       </div>
@@ -99,16 +104,20 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
             {chartData.map((d, index) => {
               const monthWidth = graphWidth / chartData.length;
               const groupCenterX = paddingLeft + index * monthWidth + monthWidth / 2;
-              const barWidth = Math.max(16, monthWidth * 0.18);
-              const gap = 4;
+              const barWidth = Math.max(12, monthWidth * 0.16);
+              const gap = 3;
 
               const recHeight = (d.receitas / maxVal) * graphHeight;
-              const recX = groupCenterX - barWidth - gap / 2;
+              const recX = groupCenterX - 1.5 * barWidth - gap;
               const recY = chartHeight - paddingBottom - recHeight;
 
               const despHeight = (d.despesas / maxVal) * graphHeight;
-              const despX = groupCenterX + gap / 2;
+              const despX = groupCenterX - 0.5 * barWidth;
               const despY = chartHeight - paddingBottom - despHeight;
+
+              const invHeight = ((d.investimentos || 0) / maxVal) * graphHeight;
+              const invX = groupCenterX + 0.5 * barWidth + gap;
+              const invY = chartHeight - paddingBottom - invHeight;
 
               const isHovered = activeTooltip?.month === d.name;
 
@@ -135,6 +144,16 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   />
 
                   <rect
+                    x={invX}
+                    y={invY}
+                    width={barWidth}
+                    height={Math.max(2, invHeight)}
+                    rx="4"
+                    fill={isHovered ? "#22d3ee" : "#0891b2"}
+                    className="animateBarGrow cursor-pointer transition-all duration-200 hover:brightness-125"
+                  />
+
+                  <rect
                     x={paddingLeft + index * monthWidth}
                     y={paddingTop}
                     width={monthWidth}
@@ -146,10 +165,11 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     onMouseEnter={() => {
                       setActiveTooltip({
                         x: groupCenterX,
-                        y: Math.max(120, Math.min(recY, despY) - 10),
+                        y: Math.max(100, Math.min(recY, despY, invY) - 10),
                         month: d.name,
                         receitas: d.receitas,
-                        despesas: d.despesas
+                        despesas: d.despesas,
+                        investimentos: d.investimentos || 0
                       });
                     }}
                     onMouseLeave={() => setActiveTooltip(null)}
@@ -195,9 +215,9 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Tooltip background card */}
                   <rect
                     x="-85"
-                    y="-115"
+                    y="-132"
                     width="170"
-                    height="100"
+                    height="116"
                     rx="12"
                     fill={theme === "dark" ? "#070b13" : "#ffffff"}
                     stroke={theme === "dark" ? "#1e293b" : "#cbd5e1"}
@@ -225,7 +245,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Header: Month name */}
                   <text
                     x="-73"
-                    y="-96"
+                    y="-112"
                     fill={theme === "dark" ? "#f1f5f9" : "#0f172a"}
                     fontSize="11"
                     fontWeight="bold"
@@ -236,7 +256,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
 
                   {/* Active indicator badge if last month */}
                   {activeTooltip.month === chartData[chartData.length - 1]?.name && (
-                    <g transform="translate(38, -106)" pointerEvents="none">
+                    <g transform="translate(38, -122)" pointerEvents="none">
                       <rect
                         x="0"
                         y="0"
@@ -265,9 +285,9 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Divider line */}
                   <line
                     x1="-73"
-                    y1="-86"
+                    y1="-102"
                     x2="73"
-                    y2="-86"
+                    y2="-102"
                     stroke={theme === "dark" ? "#1e293b" : "#f1f5f9"}
                     strokeWidth="1"
                     pointerEvents="none"
@@ -276,7 +296,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Revenues Row */}
                   <text
                     x="-73"
-                    y="-69"
+                    y="-85"
                     fill="#10b981"
                     fontSize="9.5"
                     fontWeight="semibold"
@@ -286,7 +306,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   </text>
                   <text
                     x="73"
-                    y="-69"
+                    y="-85"
                     fill="#10b981"
                     fontSize="10"
                     fontWeight="extrabold"
@@ -299,7 +319,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Expenses Row */}
                   <text
                     x="-73"
-                    y="-52"
+                    y="-68"
                     fill="#f43f5e"
                     fontSize="9.5"
                     fontWeight="semibold"
@@ -309,7 +329,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   </text>
                   <text
                     x="73"
-                    y="-52"
+                    y="-68"
                     fill="#f43f5e"
                     fontSize="10"
                     fontWeight="extrabold"
@@ -319,12 +339,35 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     {formatCurrency(activeTooltip.despesas)}
                   </text>
 
+                  {/* Investments Row */}
+                  <text
+                    x="-73"
+                    y="-51"
+                    fill="#06b6d4"
+                    fontSize="9.5"
+                    fontWeight="semibold"
+                    pointerEvents="none"
+                  >
+                    Investimentos:
+                  </text>
+                  <text
+                    x="73"
+                    y="-51"
+                    fill="#06b6d4"
+                    fontSize="10"
+                    fontWeight="extrabold"
+                    textAnchor="end"
+                    pointerEvents="none"
+                  >
+                    {formatCurrency(activeTooltip.investimentos)}
+                  </text>
+
                   {/* Small inner divider */}
                   <line
                     x1="-73"
-                    y1="-43"
+                    y1="-41"
                     x2="73"
-                    y2="-43"
+                    y2="-41"
                     stroke={theme === "dark" ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.8)"}
                     strokeWidth="1"
                     strokeDasharray="2 2"
@@ -334,24 +377,24 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   {/* Balance Row */}
                   <text
                     x="-73"
-                    y="-28"
+                    y="-26"
                     fill={theme === "dark" ? "#94a3b8" : "#475569"}
                     fontSize="9.5"
                     fontWeight="semibold"
                     pointerEvents="none"
                   >
-                    Balanço:
+                    Saldo do Mês:
                   </text>
                   <text
                     x="73"
-                    y="-28"
+                    y="-26"
                     fill={theme === "dark" ? "#ffffff" : "#0f172a"}
                     fontSize="10.5"
                     fontWeight="black"
                     textAnchor="end"
                     pointerEvents="none"
                   >
-                    {formatCurrency(activeTooltip.receitas - activeTooltip.despesas)}
+                    {formatCurrency(activeTooltip.receitas - activeTooltip.despesas - activeTooltip.investimentos)}
                   </text>
                 </g>
               );

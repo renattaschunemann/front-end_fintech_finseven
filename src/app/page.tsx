@@ -217,11 +217,14 @@ export default function Home() {
 
       let receitas = 0;
       let despesas = 0;
+      let investimentos = 0;
       monthTxs.forEach(t => {
         if (t.type === "Receitas") {
           receitas += Math.abs(t.value);
-        } else if (t.type === "Despesas" || t.type === "Investimentos") {
+        } else if (t.type === "Despesas") {
           despesas += Math.abs(t.value);
+        } else if (t.type === "Investimentos") {
+          investimentos += Math.abs(t.value);
         }
       });
 
@@ -229,7 +232,8 @@ export default function Home() {
       monthsData.push({
         name: monthLabel,
         receitas: receitas,
-        despesas: despesas
+        despesas: despesas,
+        investimentos: investimentos
       });
     }
 

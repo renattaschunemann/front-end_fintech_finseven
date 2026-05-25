@@ -45,6 +45,7 @@ export interface ChartProps {
     name: string;
     receitas: number;
     despesas: number;
+    investimentos: number;
   }>;
   theme: "dark" | "light";
   formatCurrency: (val: number) => string;
