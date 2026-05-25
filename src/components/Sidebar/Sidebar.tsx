@@ -235,7 +235,7 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
 
     return txs
       .filter(t => t.date.startsWith(currentMonthPrefix))
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .sort((a, b) => b.date.localeCompare(a.date));
   }, [txs]);
 
   const currentMonthData = React.useMemo(() => {
