@@ -139,7 +139,7 @@ const mapBackendInvestimentoToFrontend = (item: any): Transaction => {
     category: category,
     description: description,
     account: item.banco ? item.banco.nome : "Outros",
-    value: Math.abs(item.valorAplicado),
+    value: -Math.abs(item.valorAplicado),
     type: "Investimentos",
   };
 };

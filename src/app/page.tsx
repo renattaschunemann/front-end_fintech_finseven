@@ -149,21 +149,24 @@ export default function Home() {
 
     let receitasDoMes = 0;
     let despesasDoMes = 0;
+    let investimentosDoMes = 0;
     targetTxs.forEach(t => {
-      if (t.value > 0) {
-        receitasDoMes += t.value;
-      } else {
+      if (t.type === "Receitas") {
+        receitasDoMes += Math.abs(t.value);
+      } else if (t.type === "Despesas") {
         despesasDoMes += Math.abs(t.value);
+      } else if (t.type === "Investimentos") {
+        investimentosDoMes += Math.abs(t.value);
       }
     });
 
-    const balancoDoMes = receitasDoMes - despesasDoMes;
+    const balancoDoMes = receitasDoMes - despesasDoMes - investimentosDoMes;
     // Current Balance is either calculated on top of carryover or from selected transactions if filtered
     const saldoAtual = isFiltered ? balancoDoMes : CARRYOVER_BALANCE + balancoDoMes;
 
     let receitasLabel = "Receitas do Mês";
     let despesasLabel = "Despesas do Mês";
-    let balancoLabel = "Balanço do Mês";
+    let investimentosLabel = "Investimentos do Mês";
 
     if (isFiltered) {
       const labelMap = {
@@ -174,17 +177,17 @@ export default function Home() {
       const periodLabel = labelMap[dateFilter as "today" | "7days" | "30days"] || "Período";
       receitasLabel = `Receitas (${periodLabel})`;
       despesasLabel = `Despesas (${periodLabel})`;
-      balancoLabel = `Balanço (${periodLabel})`;
+      investimentosLabel = `Investimentos (${periodLabel})`;
     }
 
     return {
       saldoAtual,
       receitasDoMes,
       despesasDoMes,
-      balancoDoMes,
+      investimentosDoMes,
       receitasLabel,
       despesasLabel,
-      balancoLabel
+      investimentosLabel
     };
   }, [transactions, filteredTransactions, dateFilter]);
 
@@ -215,9 +218,9 @@ export default function Home() {
       let receitas = 0;
       let despesas = 0;
       monthTxs.forEach(t => {
-        if (t.value > 0) {
-          receitas += t.value;
-        } else {
+        if (t.type === "Receitas") {
+          receitas += Math.abs(t.value);
+        } else if (t.type === "Despesas" || t.type === "Investimentos") {
           despesas += Math.abs(t.value);
         }
       });

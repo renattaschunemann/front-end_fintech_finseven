@@ -134,16 +134,16 @@ function PerfilContent() {
 
     transactions.forEach(t => {
       if (t.type === "Receitas") {
-        totalReceitas += t.value;
+        totalReceitas += Math.abs(t.value);
       } else if (t.type === "Despesas") {
         totalDespesas += Math.abs(t.value);
       } else if (t.type === "Investimentos") {
-        totalInvestido += t.value;
+        totalInvestido += Math.abs(t.value);
       }
     });
 
     const carryOver = 4631.25;
-    const balance = totalReceitas - totalDespesas;
+    const balance = totalReceitas - totalDespesas - totalInvestido;
     const netWorth = carryOver + balance;
 
     return {

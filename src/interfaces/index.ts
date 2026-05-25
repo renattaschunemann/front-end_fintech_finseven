@@ -32,10 +32,10 @@ export interface StatsCardsProps {
     saldoAtual: number;
     receitasDoMes: number;
     despesasDoMes: number;
-    balancoDoMes: number;
+    investimentosDoMes: number;
     receitasLabel?: string;
     despesasLabel?: string;
-    balancoLabel?: string;
+    investimentosLabel?: string;
   };
   formatCurrency: (val: number) => string;
 }
