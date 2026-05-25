@@ -16,7 +16,7 @@ export default function Sidebar({
   const router = useRouter();
   const [loggedUser, setLoggedUser] = useState<{ name: string; cpf: string; email: string } | null>(null);
 
-  const [activeReport, setActiveReport] = useState<"Mês atual" | "Último trimestre" | "Investimento anual" | "Balanço Mensal" | null>(null);
+  const [activeReport, setActiveReport] = useState<"Mês atual" | "Último trimestre" | "Investimento anual" | "Balanço Mensal" | "Extrato do Mês" | null>(null);
 
   useEffect(() => {
     const userJson = localStorage.getItem("finseven-logged-user");
@@ -131,7 +131,7 @@ export default function Sidebar({
               </button>
             </div>
             <div className="space-y-1">
-              {["Mês atual", "Último trimestre", "Investimento anual", "Balanço Mensal"].map(rep => (
+              {["Mês atual", "Último trimestre", "Investimento anual", "Balanço Mensal", "Extrato do Mês"].map(rep => (
                 <button
                   key={rep}
                   onClick={() => {
@@ -200,7 +200,7 @@ export default function Sidebar({
 }
 
 interface ReportModalProps {
-  reportType: "Mês atual" | "Último trimestre" | "Investimento anual" | "Balanço Mensal";
+  reportType: "Mês atual" | "Último trimestre" | "Investimento anual" | "Balanço Mensal" | "Extrato do Mês";
   onClose: () => void;
   theme: "dark" | "light";
 }
@@ -227,6 +227,16 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
   const formatBRL = (val: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
   };
+
+  const extratoDoMesData = React.useMemo(() => {
+    const now = new Date();
+    const padMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const currentMonthPrefix = `${now.getFullYear()}-${padMonth}`;
+
+    return txs
+      .filter(t => t.date.startsWith(currentMonthPrefix))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [txs]);
 
   const currentMonthData = React.useMemo(() => {
     const now = new Date();
@@ -646,6 +656,71 @@ function ReportModal({ reportType, onClose, theme }: ReportModalProps) {
                   <div className="h-full bg-blue-500 rounded-l-full" style={{ width: `${bankBalanceData.itauVolumePct}%` }} />
                   <div className="h-full bg-violet-500 rounded-r-full" style={{ width: `${bankBalanceData.bbVolumePct}%` }} />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {reportType === "Extrato do Mês" && (
+            <div className="space-y-4 animateFadeIn">
+              <p className="text-slate-400 font-medium leading-relaxed">
+                Demonstrativo detalhado de todas as movimentações financeiras do mês corrente (<span className="text-blue-400 font-bold">Maio 2026</span>), ordenadas cronologicamente da mais antiga para a mais recente.
+              </p>
+
+              <div className={`border rounded-2xl overflow-hidden max-h-[300px] overflow-y-auto pr-1 ${
+                theme === "dark" ? "border-slate-800/60" : "border-slate-200"
+              }`}>
+                {extratoDoMesData.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500 font-medium">
+                    Nenhuma movimentação encontrada para o mês atual.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-800/40">
+                    {extratoDoMesData.map((t, idx) => {
+                      const isIncome = t.value > 0;
+                      const dateParts = t.date.split("-");
+                      const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}` : t.date;
+
+                      return (
+                        <div key={t.id || idx} className={`p-3 flex items-center justify-between text-xs transition-colors duration-150 ${
+                          theme === "dark" ? "hover:bg-slate-850/30" : "hover:bg-slate-50"
+                        }`}>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                              theme === "dark" ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
+                            }`}>
+                              {formattedDate}
+                            </span>
+                            <div className="space-y-0.5">
+                              <span className={`font-semibold block ${theme === "dark" ? "text-slate-200" : "text-slate-800"}`}>
+                                {t.description || t.category}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                {t.account} • {t.category}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-right flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider ${
+                              t.type === "Investimentos"
+                                ? "bg-cyan-950/40 border border-cyan-800/30 text-cyan-400"
+                                : isIncome 
+                                ? "bg-emerald-950/40 border border-emerald-800/30 text-emerald-400" 
+                                : "bg-rose-950/40 border border-rose-800/30 text-rose-450"
+                            }`}>
+                              {t.type === "Investimentos" ? "Inv" : isIncome ? "Rec" : "Desp"}
+                            </span>
+                            <span className={`font-bold ${
+                              t.type === "Investimentos" ? "text-cyan-400" : isIncome ? "text-emerald-400" : "text-rose-450"
+                            }`}>
+                              {isIncome ? "+ " : "- "}{formatBRL(Math.abs(t.value))}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
