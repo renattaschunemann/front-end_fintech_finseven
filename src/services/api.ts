@@ -6,7 +6,7 @@ export const getBancoId = (accountName: string): number => {
   const acc = accountName.toLowerCase();
   if (acc.includes("itau") || acc.includes("itaú")) return 1;
   if (acc.includes("brasil") || acc.includes("bb")) return 2;
-  return 3; // Default Outros
+  return 3; 
 };
 
 export const resolveBancoId = async (accountName: string): Promise<number> => {
@@ -35,7 +35,7 @@ export const getAccountNameFromId = (id: number): string => {
 
 export const getCategoriaId = (category: string): number => {
   const mapping: Record<string, number> = {
-    // Receitas
+    
     "Salário": 1,
     "Comissão": 2,
     "Hora Extra": 3,
@@ -43,7 +43,7 @@ export const getCategoriaId = (category: string): number => {
     "Freelancer": 5,
     "Freelance": 5,
     "Rendimentos": 6,
-    // Despesas
+    
     "Saúde": 10,
     "Escola": 11,
     "Transporte": 12,
@@ -55,7 +55,7 @@ export const getCategoriaId = (category: string): number => {
     "Internet": 18,
     "Aluguel": 19,
     "Cartão de Crédito": 20,
-    // Investimentos
+    
     "Tesouro Direto": 30,
     "CDB": 31,
     "LCI/LCA": 32,

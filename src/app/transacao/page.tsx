@@ -185,12 +185,12 @@ function TransacaoContent() {
       dbType = "DESPESA";
     }
 
-    // Filter matching categories from API
+    
     const matchingDb = apiCategories
       .filter((cat: any) => cat.tiposTransacao && cat.tiposTransacao.toUpperCase() === dbType)
       .map((cat: any) => cat.descricao);
 
-    // Combine and deduplicate
+    
     const combined = Array.from(new Set([...defaults, ...matchingDb])) as string[];
     return combined;
   };

@@ -161,7 +161,7 @@ export default function Home() {
     });
 
     const balancoDoMes = receitasDoMes - despesasDoMes - investimentosDoMes;
-    // Current Balance is either calculated on top of carryover or from selected transactions if filtered
+    
     const saldoAtual = isFiltered ? balancoDoMes : CARRYOVER_BALANCE + balancoDoMes;
 
     let receitasLabel = "Receitas do Mês";
@@ -201,15 +201,15 @@ export default function Home() {
     const now = new Date();
 
     for (let i = 5; i >= 0; i--) {
-      // Calculate target month and year
+      
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const year = d.getFullYear();
       const monthIdx = d.getMonth();
       
-      // "Mês/Ano" format (e.g. "Dez/25", "Jan/26", "Mai/26")
+      
       const monthLabel = `${shortMonthNames[monthIdx]}/${String(year).slice(-2)}`;
 
-      // Filter transactions for this specific month/year prefix
+      
       const padMonth = String(monthIdx + 1).padStart(2, "0");
       const prefix = `${year}-${padMonth}`;
       
@@ -228,7 +228,7 @@ export default function Home() {
         }
       });
 
-      // Decouple the chart month total from the table date filter to always show full month totals
+      
       monthsData.push({
         name: monthLabel,
         receitas: receitas,

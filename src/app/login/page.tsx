@@ -227,11 +227,11 @@ export default function LoginPage() {
   return (
     <div className={`min-h-screen w-screen flex flex-col justify-center items-center p-4 transition-colors duration-500 overflow-hidden font-sans relative ${theme === "dark" ? "bg-[#0b0f19] text-slate-100" : "bg-[#f8fafc] text-slate-800"
       }`}>
-      {/* Dynamic Background Glowing Orbs */}
+      
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
 
-      {/* Toast Alert */}
+      
       {toast && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-300 shadow-lg animate-bounce ${toast.type === "success"
             ? "bg-emerald-950/95 border-emerald-500/35 text-emerald-300"
@@ -245,9 +245,9 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Main Container */}
+      
       <div className="w-full max-w-md z-10 space-y-6">
-        {/* Header Logo */}
+        
         <div className="text-center space-y-2">
           <div className="flex justify-center">
             <img
@@ -261,10 +261,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Auth Glassmorphic Card */}
+        
         <div className={`backdrop-blur-xl border rounded-3xl p-8 shadow-2xl transition-all duration-300 ${theme === "dark" ? "bg-[#101422]/65 border-slate-800/40 shadow-black/45" : "bg-white/80 border-slate-200 shadow-slate-200/50"
           }`}>
-          {/* Tab Selector */}
+          
           <div className={`grid grid-cols-2 p-1 rounded-2xl mb-6 ${theme === "dark" ? "bg-[#070b13]/60" : "bg-slate-100"
             }`}>
             <button
@@ -291,7 +291,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Form */}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             {activeTab === "register" && (
               <div>

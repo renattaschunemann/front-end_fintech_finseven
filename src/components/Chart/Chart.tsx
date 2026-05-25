@@ -192,8 +192,8 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
             {activeTooltip && (() => {
               const tooltipWidth = 170;
               const halfWidth = tooltipWidth / 2;
-              const minSafeX = halfWidth + 5; // 90
-              const maxSafeX = chartWidth - halfWidth - 5; // 610
+              const minSafeX = halfWidth + 5; 
+              const maxSafeX = chartWidth - halfWidth - 5; 
 
               let tooltipX = activeTooltip.x;
               let arrowX = 0;
@@ -212,7 +212,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                   className="transition-all duration-200 pointer-events-none"
                   pointerEvents="none"
                 >
-                  {/* Tooltip background card */}
+                  
                   <rect
                     x="-85"
                     y="-132"
@@ -226,7 +226,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     pointerEvents="none"
                   />
 
-                  {/* Tooltip little bottom arrow */}
+                  
                   <path
                     d={`M ${arrowX - 6} -15 L ${arrowX} -9 L ${arrowX + 6} -15 Z`}
                     fill={theme === "dark" ? "#070b13" : "#ffffff"}
@@ -235,14 +235,14 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     pointerEvents="none"
                   />
 
-                  {/* Tooltip little bottom arrow fill cover */}
+                  
                   <path
                     d={`M ${arrowX - 5} -16.5 L ${arrowX} -10 L ${arrowX + 5} -16.5 Z`}
                     fill={theme === "dark" ? "#070b13" : "#ffffff"}
                     pointerEvents="none"
                   />
 
-                  {/* Header: Month name */}
+                  
                   <text
                     x="-73"
                     y="-112"
@@ -254,7 +254,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     {activeTooltip.month}
                   </text>
 
-                  {/* Active indicator badge if last month */}
+                  
                   {activeTooltip.month === chartData[chartData.length - 1]?.name && (
                     <g transform="translate(38, -122)" pointerEvents="none">
                       <rect
@@ -282,7 +282,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     </g>
                   )}
 
-                  {/* Divider line */}
+                  
                   <line
                     x1="-73"
                     y1="-102"
@@ -293,7 +293,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     pointerEvents="none"
                   />
 
-                  {/* Revenues Row */}
+                  
                   <text
                     x="-73"
                     y="-85"
@@ -316,7 +316,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     {formatCurrency(activeTooltip.receitas)}
                   </text>
 
-                  {/* Expenses Row */}
+                  
                   <text
                     x="-73"
                     y="-68"
@@ -339,7 +339,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     {formatCurrency(activeTooltip.despesas)}
                   </text>
 
-                  {/* Investments Row */}
+                  
                   <text
                     x="-73"
                     y="-51"
@@ -362,7 +362,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     {formatCurrency(activeTooltip.investimentos)}
                   </text>
 
-                  {/* Small inner divider */}
+                  
                   <line
                     x1="-73"
                     y1="-41"
@@ -374,7 +374,7 @@ export default function Chart({ chartData, theme, formatCurrency }: ChartProps) 
                     pointerEvents="none"
                   />
 
-                  {/* Balance Row */}
+                  
                   <text
                     x="-73"
                     y="-26"
